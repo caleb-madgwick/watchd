@@ -32,7 +32,7 @@ export function TitleHero({ title, tagline, backdropUrl, posterUrl, metaParts }:
         <View style={[styles.headline, { paddingBottom: spacing.lg }]}>
           <View style={styles.headlineRow}>
             {posterUrl ? (
-              <DvdCase posterUrl={posterUrl} title={title} width={posterWidth} />
+              <DvdCase posterUrl={posterUrl} title={title} width={posterWidth} still />
             ) : null}
             <View style={styles.headlineText}>
               <Text variant={isWide ? 'display' : 'title1'} accessibilityRole="header">

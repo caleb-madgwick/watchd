@@ -17,149 +17,354 @@ export interface DvdCaseProps {
   posterUrl?: string;
   title: string;
   width: number;
-  /** Hover state: springs the case up off the shelf. */
+  /** Hover: swings the cover open, revealing the tray and disc. */
   lifted?: boolean;
-  /** Press state: the little grab dip. */
+  /** Press: opens wider — the grab. */
   pressed?: boolean;
+  /** Static product-shot pose with no interaction (hero usage). */
+  still?: boolean;
 }
 
-/**
- * Poster artwork presented as a DVD keep-case: plastic edge, dark spine with
- * a fold highlight, diagonal sheen, shelf shadow. When `lifted`, the case
- * springs up and tilts open-side toward the viewer, like being picked up.
- */
-export function DvdCase({ posterUrl, title, width, lifted = false, pressed = false }: DvdCaseProps) {
-  const { colors, scheme } = useTheme();
-  const height = width / aspect.poster;
-  // useState initialisers, not useAnimatedValue: react-native-web lacks it.
-  const [lift] = useState(() => new Animated.Value(0));
-  const [grab] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    if (prefersReducedMotion()) {
-      lift.setValue(lifted ? 1 : 0);
-      return;
-    }
-    Animated.spring(lift, {
-      toValue: lifted ? 1 : 0,
-      useNativeDriver: true,
-      speed: 18,
-      bounciness: 7,
-    }).start();
-  }, [lifted, lift]);
-
-  useEffect(() => {
-    Animated.spring(grab, {
-      toValue: pressed ? 1 : 0,
-      useNativeDriver: true,
-      speed: 24,
-      bounciness: 4,
-    }).start();
-  }, [pressed, grab]);
-
-  const spineWidth = Math.max(6, width * 0.075);
+/** The disc in the tray: label print, data rings, star push-hub like the reference. */
+function Disc({ posterUrl, size, spin }: { posterUrl?: string; size: number; spin: Animated.Value }) {
+  const hub = size * 0.26;
+  const hole = size * 0.1;
 
   return (
     <Animated.View
       style={[
+        styles.disc,
         {
-          width,
-          height,
+          width: size,
+          height: size,
+          borderRadius: size / 2,
           transform: [
-            { perspective: 800 },
-            {
-              translateY: lift.interpolate({ inputRange: [0, 1], outputRange: [0, -width * 0.07] }),
-            },
-            {
-              rotateY: lift.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-8deg'] }),
-            },
-            {
-              scale: Animated.subtract(
-                lift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.05] }),
-                grab.interpolate({ inputRange: [0, 1], outputRange: [0, 0.04] }),
-              ),
-            },
+            { rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '24deg'] }) },
           ],
         },
-        lifted ? styles.shadowLifted : styles.shadowResting,
-        { shadowColor: scheme === 'dark' ? '#000000' : '#4A3B28' },
       ]}
+      pointerEvents="none"
     >
+      {posterUrl ? (
+        <Image source={{ uri: posterUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      ) : (
+        <LinearGradient
+          colors={['#B9C2CC', '#8E98A4', '#C9CFD6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+      <LinearGradient
+        colors={['rgba(255,255,255,0.40)', 'rgba(255,255,255,0)', 'rgba(140,240,255,0.18)']}
+        start={{ x: 0, y: 0.1 }}
+        end={{ x: 0.9, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <LinearGradient
+        colors={['rgba(255,150,220,0.14)', 'rgba(255,255,255,0)', 'rgba(160,255,190,0.12)']}
+        start={{ x: 1, y: 0 }}
+        end={{ x: 0, y: 0.9 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={[styles.dataRing, { inset: size * 0.045, borderRadius: size / 2 }]} />
+      <View style={[styles.dataRing, { inset: size * 0.28, borderRadius: size / 2, opacity: 0.5 }]} />
+
+      {/* Star push-hub */}
       <View
         style={[
-          styles.case,
-          {
-            backgroundColor: scheme === 'dark' ? '#0A0C0F' : '#2A2C31',
-            borderColor: scheme === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.25)',
-          },
+          styles.hub,
+          { width: hub, height: hub, borderRadius: hub / 2, top: (size - hub) / 2, left: (size - hub) / 2 },
         ]}
       >
-        {posterUrl ? (
-          <Image
-            source={{ uri: posterUrl }}
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            transition={200}
-            accessibilityLabel={`${title} case art`}
+        {[0, 45, 90, 135].map((deg) => (
+          <View
+            key={deg}
+            style={[
+              styles.hubSpoke,
+              { width: hub * 0.82, height: Math.max(2, hub * 0.09), transform: [{ rotate: `${deg}deg` }] },
+            ]}
           />
-        ) : (
-          <View style={[StyleSheet.absoluteFill, styles.fallback, { backgroundColor: colors.surfaceRaised }]}>
-            <Ionicons name="film-outline" size={width * 0.22} color={colors.textMuted} />
-            <Text variant="caption" color="muted" align="center" numberOfLines={3} style={styles.fallbackTitle}>
-              {title}
-            </Text>
-          </View>
-        )}
-
-        {/* Spine: dark left edge of the keep-case with a fold highlight */}
-        <LinearGradient
-          colors={['rgba(0,0,0,0.55)', 'rgba(0,0,0,0.18)', 'rgba(0,0,0,0)']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.spine, { width: spineWidth * 1.9 }]}
-          pointerEvents="none"
-        />
-        <View
-          style={[styles.spineFold, { left: spineWidth, backgroundColor: 'rgba(255,255,255,0.18)' }]}
-          pointerEvents="none"
-        />
-
-        {/* Plastic sheen across the sleeve */}
-        <LinearGradient
-          colors={['rgba(255,255,255,0.16)', 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0)']}
-          start={{ x: 0.1, y: 0 }}
-          end={{ x: 0.6, y: 0.9 }}
-          style={StyleSheet.absoluteFill}
-          pointerEvents="none"
-        />
+        ))}
+        <View style={[styles.hole, { width: hole, height: hole, borderRadius: hole / 2 }]} />
       </View>
     </Animated.View>
   );
 }
 
+/**
+ * A DVD keep-case as a 3D object. At rest it stands in a 3/4 product pose:
+ * visible spine, contact shadow. On hover the front cover hinges open on the
+ * spine, revealing the moulded tray, retention clips and the disc — press
+ * pulls it wider, like taking the disc out.
+ */
+export function DvdCase({
+  posterUrl,
+  title,
+  width,
+  lifted = false,
+  pressed = false,
+  still = false,
+}: DvdCaseProps) {
+  const { colors, scheme } = useTheme();
+  const height = width / aspect.poster;
+  const [open] = useState(() => new Animated.Value(0));
+
+  const target = still ? 0 : pressed ? 1 : lifted ? 0.62 : 0;
+
+  useEffect(() => {
+    if (prefersReducedMotion()) {
+      open.setValue(target);
+      return;
+    }
+    Animated.spring(open, { toValue: target, useNativeDriver: true, speed: 13, bounciness: 5 }).start();
+  }, [target, open]);
+
+  const dark = scheme === 'dark';
+  const spineW = Math.max(7, width * 0.085);
+  const coverW = width - spineW;
+  const discSize = coverW * 0.78;
+  const shell = dark ? '#101318' : '#2C2F36';
+  const shellEdge = dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
+
+  return (
+    <View style={{ width, height }}>
+      {/* Contact shadow on the shelf */}
+      <Animated.View
+        style={[
+          styles.contactShadow,
+          {
+            width: width * 0.86,
+            left: width * 0.07,
+            opacity: open.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.28] }),
+            transform: [{ scaleX: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) }],
+          },
+        ]}
+        pointerEvents="none"
+      />
+
+      {/* The case, standing in 3/4 perspective; straightens slightly as it opens */}
+      <Animated.View
+        style={[
+          styles.caseGroup,
+          {
+            transform: [
+              { perspective: 1100 },
+              { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['-16deg', '-6deg'] }) },
+              { translateY: open.interpolate({ inputRange: [0, 1], outputRange: [0, -height * 0.04] }) },
+              { scale: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) },
+            ],
+          },
+        ]}
+      >
+        {/* ── Back shell + moulded tray interior ── */}
+        <View style={[styles.tray, { backgroundColor: shell, borderColor: shellEdge }]}>
+          <View
+            style={[
+              styles.recess,
+              {
+                width: discSize * 1.1,
+                height: discSize * 1.1,
+                borderRadius: (discSize * 1.1) / 2,
+                top: (height - discSize * 1.1) / 2,
+                right: coverW * 0.055,
+              },
+            ]}
+          />
+          <View style={{ position: 'absolute', top: (height - discSize) / 2, right: coverW * 0.09 }}>
+            <Disc posterUrl={posterUrl} size={discSize} spin={open} />
+          </View>
+          {/* Retention clips, top and bottom like the reference shells */}
+          {[0.08, 0.86].map((t) => (
+            <View key={t} style={[styles.clipH, { top: height * t, left: spineW + coverW * 0.06 }]} />
+          ))}
+          {/* Shade that lifts as the cover opens */}
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              styles.trayShade,
+              { opacity: open.interpolate({ inputRange: [0, 1], outputRange: [0.6, 0.08] }) },
+            ]}
+            pointerEvents="none"
+          />
+        </View>
+
+        {/* ── Structural spine: stays put while the cover swings ── */}
+        <View style={[styles.spineBar, { width: spineW, backgroundColor: shell, borderColor: shellEdge }]}>
+          <View style={styles.spineRidge} />
+          <View style={[styles.spineRidge, { right: 1.5 }]} />
+        </View>
+
+        {/* ── Front cover: hinges on the spine edge ── */}
+        <Animated.View
+          style={[
+            styles.coverSlot,
+            {
+              left: spineW,
+              width: coverW,
+              transform: [
+                { perspective: 900 },
+                { translateX: -coverW / 2 },
+                { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-72deg'] }) },
+                { translateX: coverW / 2 },
+              ],
+            },
+          ]}
+        >
+          <View style={[styles.cover, { backgroundColor: shell, borderColor: shellEdge }]}>
+            {posterUrl ? (
+              <Image
+                source={{ uri: posterUrl }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                transition={200}
+                accessibilityLabel={`${title} case art`}
+              />
+            ) : (
+              <View style={[StyleSheet.absoluteFill, styles.fallback, { backgroundColor: colors.surfaceRaised }]}>
+                <Ionicons name="film-outline" size={width * 0.2} color={colors.textMuted} />
+                <Text variant="caption" color="muted" align="center" numberOfLines={3} style={styles.fallbackTitle}>
+                  {title}
+                </Text>
+              </View>
+            )}
+            {/* Clear-sleeve sheen, fading as it opens */}
+            <AnimatedLinearGradient
+              colors={['rgba(255,255,255,0.22)', 'rgba(255,255,255,0.04)', 'rgba(255,255,255,0)']}
+              start={{ x: 0.05, y: 0 }}
+              end={{ x: 0.65, y: 1 }}
+              style={[
+                StyleSheet.absoluteFill,
+                { opacity: open.interpolate({ inputRange: [0, 1], outputRange: [1, 0.3] }) },
+              ]}
+              pointerEvents="none"
+            />
+            {/* Hinge-side crease */}
+            <LinearGradient
+              colors={['rgba(0,0,0,0.4)', 'rgba(0,0,0,0)']}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={[styles.crease]}
+              pointerEvents="none"
+            />
+          </View>
+        </Animated.View>
+      </Animated.View>
+    </View>
+  );
+}
+
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
 const styles = StyleSheet.create({
-  case: {
-    flex: 1,
-    // Keep-case corners: tight on the spine side, rounder on the opening side.
+  caseGroup: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    overflow: 'visible',
+  },
+  contactShadow: {
+    position: 'absolute',
+    bottom: -5,
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: '#000000',
+  },
+  tray: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopLeftRadius: 3,
     borderBottomLeftRadius: 3,
-    borderTopRightRadius: 9,
-    borderBottomRightRadius: 9,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
-  spine: {
+  recess: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0,0,0,0.38)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  clipH: {
+    position: 'absolute',
+    width: 26,
+    height: 7,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.16)',
+  },
+  trayShade: {
+    backgroundColor: '#000000',
+  },
+  spineBar: {
     position: 'absolute',
     left: 0,
     top: 0,
     bottom: 0,
+    borderTopLeftRadius: 3,
+    borderBottomLeftRadius: 3,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  spineFold: {
+  spineRidge: {
     position: 'absolute',
     top: 0,
     bottom: 0,
+    left: 1.5,
     width: 1,
-    opacity: 0.7,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  coverSlot: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+  },
+  cover: {
+    flex: 1,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
+  },
+  crease: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 10,
+  },
+  disc: {
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.30)',
+  },
+  dataRing: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.28)',
+  },
+  hub: {
+    position: 'absolute',
+    backgroundColor: 'rgba(20,22,27,0.92)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  hubSpoke: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    borderRadius: 2,
+  },
+  hole: {
+    backgroundColor: '#05060A',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
   },
   fallback: {
     alignItems: 'center',
@@ -169,17 +374,5 @@ const styles = StyleSheet.create({
   },
   fallbackTitle: {
     paddingHorizontal: spacing.xs,
-  },
-  shadowResting: {
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  shadowLifted: {
-    shadowOpacity: 0.5,
-    shadowRadius: 18,
-    shadowOffset: { width: -6, height: 14 },
-    elevation: 10,
   },
 });
