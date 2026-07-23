@@ -54,6 +54,16 @@ export const tmdb = {
     return normalizePaged(raw, normalizeTvSummary);
   },
 
+  async topRatedMovies(page = 1): Promise<Paginated<TitleSummary>> {
+    const raw = await fetchTmdb<TmdbPaged<TmdbMovieSummary>>('/movie/top_rated', { page });
+    return normalizePaged(raw, normalizeMovieSummary);
+  },
+
+  async topRatedTv(page = 1): Promise<Paginated<TitleSummary>> {
+    const raw = await fetchTmdb<TmdbPaged<TmdbTvSummary>>('/tv/top_rated', { page });
+    return normalizePaged(raw, normalizeTvSummary);
+  },
+
   async searchMovies(query: string, page = 1): Promise<Paginated<TitleSummary>> {
     const raw = await fetchTmdb<TmdbPaged<TmdbMovieSummary>>('/search/movie', { query, page });
     return normalizePaged(raw, normalizeMovieSummary);

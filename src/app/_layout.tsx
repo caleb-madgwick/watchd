@@ -35,7 +35,7 @@ const FULLSCREEN_PREFIXES = ['/sign-in', '/sign-up', '/forgot-password', '/reset
 function AppShell() {
   const { colors, scheme } = useTheme();
   const { session } = useAuth();
-  const { isDesktop } = useBreakpoint();
+  const { isWide } = useBreakpoint();
   const pathname = usePathname();
 
   const baseNavTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -53,7 +53,7 @@ function AppShell() {
   };
 
   const isFullscreenRoute = FULLSCREEN_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-  const showSidebar = isDesktop && !isFullscreenRoute && (!!session || config.demoMode);
+  const showSidebar = isWide && !isFullscreenRoute && (!!session || config.demoMode);
 
   return (
     <NavThemeProvider value={navTheme}>

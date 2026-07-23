@@ -11,17 +11,29 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
 
-type NavHref = '/home' | '/search' | '/activity' | '/profile' | '/watchlist' | '/settings';
+type NavHref =
+  | '/home'
+  | '/movies'
+  | '/tv'
+  | '/search'
+  | '/activity'
+  | '/profile'
+  | '/watchlist'
+  | '/settings';
 
 interface NavItem {
   href: NavHref;
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconActive: keyof typeof Ionicons.glyphMap;
+  /** Extra path prefixes that should light this item up (e.g. detail pages). */
+  alsoMatch?: string[];
 }
 
 const BROWSE_NAV: NavItem[] = [
-  { href: '/home', title: 'Home', icon: 'film-outline', iconActive: 'film' },
+  { href: '/home', title: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { href: '/movies', title: 'Movies', icon: 'film-outline', iconActive: 'film', alsoMatch: ['/movie'] },
+  { href: '/tv', title: 'TV shows', icon: 'tv-outline', iconActive: 'tv' },
   { href: '/search', title: 'Search', icon: 'search-outline', iconActive: 'search' },
   { href: '/activity', title: 'Activity', icon: 'pulse-outline', iconActive: 'pulse' },
 ];
@@ -69,7 +81,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
           />
         </View>
         <Text
-          variant="callout"
+          variant="body"
           style={{
             color: active ? colors.accent : colors.text,
             fontWeight: active ? '600' : '400',
@@ -92,7 +104,11 @@ export function Sidebar() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (item: NavItem | string) => {
+    const prefixes =
+      typeof item === 'string' ? [item] : [item.href, ...(item.alsoMatch ?? [])];
+    return prefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  };
 
   return (
     <View style={[styles.sidebar, { borderRightColor: colors.border }]}>
@@ -138,14 +154,14 @@ export function Sidebar() {
         <View style={styles.nav}>
           <SectionLabel>Browse</SectionLabel>
           {BROWSE_NAV.map((item) => (
-            <NavRow key={item.href} item={item} active={isActive(item.href)} />
+            <NavRow key={item.href} item={item} active={isActive(item)} />
           ))}
 
           <View style={styles.sectionGap} />
 
           <SectionLabel>Your library</SectionLabel>
           {LIBRARY_NAV.map((item) => (
-            <NavRow key={item.href} item={item} active={isActive(item.href)} />
+            <NavRow key={item.href} item={item} active={isActive(item)} />
           ))}
         </View>
 
@@ -219,7 +235,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    height: 46,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
   },

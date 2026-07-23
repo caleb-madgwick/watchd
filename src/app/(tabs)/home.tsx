@@ -141,8 +141,14 @@ export default function HomeScreen() {
                 heading="Trending movies"
                 titles={trendingMovies.data}
                 loading={trendingMovies.isLoading}
+                seeAllHref="/movies"
               />
-              <MediaRow heading="Trending TV" titles={trendingTv.data} loading={trendingTv.isLoading} />
+              <MediaRow
+                heading="Trending TV"
+                titles={trendingTv.data}
+                loading={trendingTv.isLoading}
+                seeAllHref="/tv"
+              />
 
               {watchlist.data && watchlist.data.length > 0 ? (
                 <MediaRow

@@ -23,8 +23,8 @@ const TAB_CONFIG: {
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { session, profile, initializing } = useAuth();
-  // On desktop the root layout renders the persistent sidebar instead.
-  const { isDesktop } = useBreakpoint();
+  // On wide screens the root layout renders the persistent sidebar instead.
+  const { isWide } = useBreakpoint();
 
   if (!config.demoMode) {
     if (!initializing && !session) {
@@ -42,7 +42,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: isDesktop
+        tabBarStyle: isWide
           ? { display: 'none' }
           : {
               backgroundColor: colors.tabBar,

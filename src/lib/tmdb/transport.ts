@@ -74,10 +74,20 @@ function demoFetch<T>(path: string, params: TmdbParams): T {
   const asAny = (value: unknown) => value as T;
   const query = String(params.query ?? '').toLowerCase();
 
-  if (/^\/trending\/movie\//.test(path) || path === '/movie/popular' || path === '/discover/movie') {
+  if (
+    /^\/trending\/movie\//.test(path) ||
+    path === '/movie/popular' ||
+    path === '/movie/top_rated' ||
+    path === '/discover/movie'
+  ) {
     return asAny(paged(FIXTURE_MOVIES));
   }
-  if (/^\/trending\/tv\//.test(path) || path === '/tv/popular' || path === '/discover/tv') {
+  if (
+    /^\/trending\/tv\//.test(path) ||
+    path === '/tv/popular' ||
+    path === '/tv/top_rated' ||
+    path === '/discover/tv'
+  ) {
     return asAny(paged(FIXTURE_TV));
   }
   if (path === '/search/movie') {
