@@ -24,7 +24,9 @@ export default function TabsLayout() {
   const { colors } = useTheme();
   const { session, profile, initializing } = useAuth();
   // On wide screens the root layout renders the persistent sidebar instead.
-  const { isWide } = useBreakpoint();
+  const { isWide, width } = useBreakpoint();
+  // Between phone and sidebar widths, lay tab labels beside icons, not under.
+  const besideIcon = width >= 600;
 
   if (!config.demoMode) {
     if (!initializing && !session) {
@@ -48,8 +50,12 @@ export default function TabsLayout() {
               backgroundColor: colors.tabBar,
               borderTopColor: colors.border,
               borderTopWidth: StyleSheet.hairlineWidth,
+              ...(besideIcon ? { height: 58 } : null),
             },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelPosition: besideIcon ? 'beside-icon' : 'below-icon',
+        tabBarLabelStyle: besideIcon
+          ? { fontSize: 14.5, fontWeight: '600', marginLeft: 6 }
+          : { fontSize: 12, fontWeight: '600' },
       }}
     >
       {TAB_CONFIG.map((tab) => (

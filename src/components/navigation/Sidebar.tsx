@@ -76,7 +76,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
         <View style={styles.iconSlot}>
           <Ionicons
             name={active ? item.iconActive : item.icon}
-            size={20}
+            size={22}
             color={active ? colors.accent : colors.textSecondary}
           />
         </View>
@@ -84,7 +84,8 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
           variant="body"
           style={{
             color: active ? colors.accent : colors.text,
-            fontWeight: active ? '600' : '400',
+            fontSize: 16.5,
+            fontWeight: active ? '600' : '500',
           }}
         >
           {item.title}
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 46,
+    height: 48,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.sm,
   },
@@ -243,11 +244,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     width: 3,
-    height: 18,
+    height: 20,
     borderRadius: radius.full,
   },
   iconSlot: {
-    width: 34,
+    width: 38,
     alignItems: 'center',
     marginRight: spacing.xs,
   },
