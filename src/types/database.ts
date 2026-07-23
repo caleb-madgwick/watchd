@@ -10,7 +10,7 @@ export type WatchStatusRow = 'watchlist' | 'watching' | 'watched' | 'paused' | '
 export type ListVisibilityRow = 'public' | 'private';
 export type ActivityTypeRow = 'logged' | 'tv_completed' | 'list_created' | 'followed';
 
-export interface ProfileRow {
+export type ProfileRow = {
   id: string;
   username: string;
   display_name: string | null;
@@ -24,7 +24,7 @@ export interface ProfileRow {
   updated_at: string;
 }
 
-export interface TitleRow {
+export type TitleRow = {
   id: string;
   tmdb_id: number;
   media_type: MediaTypeRow;
@@ -37,7 +37,7 @@ export interface TitleRow {
   created_at: string;
 }
 
-export interface UserTitleStatusRow {
+export type UserTitleStatusRow = {
   id: string;
   user_id: string;
   title_id: string;
@@ -49,7 +49,7 @@ export interface UserTitleStatusRow {
   updated_at: string;
 }
 
-export interface DiaryEntryRow {
+export type DiaryEntryRow = {
   id: string;
   user_id: string;
   title_id: string;
@@ -60,7 +60,7 @@ export interface DiaryEntryRow {
   updated_at: string;
 }
 
-export interface TvProgressRow {
+export type TvProgressRow = {
   id: string;
   user_id: string;
   title_id: string;
@@ -72,7 +72,7 @@ export interface TvProgressRow {
   updated_at: string;
 }
 
-export interface ReviewRow {
+export type ReviewRow = {
   id: string;
   user_id: string;
   title_id: string;
@@ -85,25 +85,25 @@ export interface ReviewRow {
   updated_at: string;
 }
 
-export interface ReviewLikeRow {
+export type ReviewLikeRow = {
   user_id: string;
   review_id: string;
   created_at: string;
 }
 
-export interface FollowRow {
+export type FollowRow = {
   follower_id: string;
   following_id: string;
   created_at: string;
 }
 
-export interface BlockRow {
+export type BlockRow = {
   blocker_id: string;
   blocked_id: string;
   created_at: string;
 }
 
-export interface ListRow {
+export type ListRow = {
   id: string;
   user_id: string;
   name: string;
@@ -114,7 +114,7 @@ export interface ListRow {
   updated_at: string;
 }
 
-export interface ListItemRow {
+export type ListItemRow = {
   id: string;
   list_id: string;
   title_id: string;
@@ -123,7 +123,7 @@ export interface ListItemRow {
   created_at: string;
 }
 
-export interface ActivityRow {
+export type ActivityRow = {
   id: string;
   actor_id: string;
   activity_type: ActivityTypeRow;
@@ -135,7 +135,7 @@ export interface ActivityRow {
   created_at: string;
 }
 
-export interface ReportRow {
+export type ReportRow = {
   id: string;
   reporter_id: string;
   review_id: string;
@@ -145,7 +145,7 @@ export interface ReportRow {
 }
 
 /** Shape returned by the get_activity_feed() RPC (one JSON object per activity). */
-export interface FeedItem {
+export type FeedItem = {
   id: string;
   activity_type: ActivityTypeRow;
   created_at: string;
@@ -175,7 +175,7 @@ export interface FeedItem {
   } | null;
 }
 
-export interface CommunitySummary {
+export type CommunitySummary = {
   avg_rating: number | null;
   rating_count: number;
   watched_count: number;
@@ -183,35 +183,125 @@ export interface CommunitySummary {
   review_count: number;
 }
 
-export interface LogTitleResult {
+export type LogTitleResult = {
   status_id: string;
   review_id: string | null;
   diary_entry_id: string | null;
   activity_id: string | null;
 }
 
-type TableShape<Row> = {
+type Relationship = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+}
+
+type TableShape<Row, Rels extends Relationship[] = []> = {
   Row: Row;
   Insert: Partial<Row>;
   Update: Partial<Row>;
-  Relationships: [];
+  Relationships: Rels;
 };
 
-export interface Database {
+/** FK metadata (Postgres default constraint names) so embedded selects type-check. */
+type TitleRel<Name extends string> = {
+  foreignKeyName: Name;
+  columns: ['title_id'];
+  isOneToOne: false;
+  referencedRelation: 'titles';
+  referencedColumns: ['id'];
+};
+type ProfileRel<Name extends string, Col extends string> = {
+  foreignKeyName: Name;
+  columns: [Col];
+  isOneToOne: false;
+  referencedRelation: 'profiles';
+  referencedColumns: ['id'];
+};
+
+export type Database = {
   public: {
     Tables: {
       profiles: TableShape<ProfileRow>;
       titles: TableShape<TitleRow>;
-      user_title_status: TableShape<UserTitleStatusRow>;
-      diary_entries: TableShape<DiaryEntryRow>;
-      tv_progress: TableShape<TvProgressRow>;
-      reviews: TableShape<ReviewRow>;
-      review_likes: TableShape<ReviewLikeRow>;
-      follows: TableShape<FollowRow>;
+      user_title_status: TableShape<
+        UserTitleStatusRow,
+        [
+          TitleRel<'user_title_status_title_id_fkey'>,
+          ProfileRel<'user_title_status_user_id_fkey', 'user_id'>,
+        ]
+      >;
+      diary_entries: TableShape<
+        DiaryEntryRow,
+        [TitleRel<'diary_entries_title_id_fkey'>, ProfileRel<'diary_entries_user_id_fkey', 'user_id'>]
+      >;
+      tv_progress: TableShape<
+        TvProgressRow,
+        [TitleRel<'tv_progress_title_id_fkey'>, ProfileRel<'tv_progress_user_id_fkey', 'user_id'>]
+      >;
+      reviews: TableShape<
+        ReviewRow,
+        [TitleRel<'reviews_title_id_fkey'>, ProfileRel<'reviews_user_id_fkey', 'user_id'>]
+      >;
+      review_likes: TableShape<
+        ReviewLikeRow,
+        [
+          ProfileRel<'review_likes_user_id_fkey', 'user_id'>,
+          {
+            foreignKeyName: 'review_likes_review_id_fkey';
+            columns: ['review_id'];
+            isOneToOne: false;
+            referencedRelation: 'reviews';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
+      follows: TableShape<
+        FollowRow,
+        [
+          ProfileRel<'follows_follower_id_fkey', 'follower_id'>,
+          ProfileRel<'follows_following_id_fkey', 'following_id'>,
+        ]
+      >;
       blocks: TableShape<BlockRow>;
-      lists: TableShape<ListRow>;
-      list_items: TableShape<ListItemRow>;
-      activities: TableShape<ActivityRow>;
+      lists: TableShape<ListRow, [ProfileRel<'lists_user_id_fkey', 'user_id'>]>;
+      list_items: TableShape<
+        ListItemRow,
+        [
+          TitleRel<'list_items_title_id_fkey'>,
+          {
+            foreignKeyName: 'list_items_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'lists';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
+      activities: TableShape<
+        ActivityRow,
+        [
+          TitleRel<'activities_title_id_fkey'>,
+          ProfileRel<'activities_actor_id_fkey', 'actor_id'>,
+          ProfileRel<'activities_subject_user_id_fkey', 'subject_user_id'>,
+          {
+            foreignKeyName: 'activities_review_id_fkey';
+            columns: ['review_id'];
+            isOneToOne: false;
+            referencedRelation: 'reviews';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'activities_list_id_fkey';
+            columns: ['list_id'];
+            isOneToOne: false;
+            referencedRelation: 'lists';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
       reports: TableShape<ReportRow>;
     };
     Views: Record<string, never>;

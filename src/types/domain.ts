@@ -12,6 +12,9 @@ export interface TitleSummary {
   originalTitle?: string;
   posterUrl?: string;
   backdropUrl?: string;
+  /** Raw TMDB image paths ("/abc.jpg") — stored in the titles reference table. */
+  posterPath?: string;
+  backdropPath?: string;
   releaseYear?: number;
   releaseDate?: string;
   overview?: string;
