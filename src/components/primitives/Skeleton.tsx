@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Animated,
+  Platform,
   StyleSheet,
   View,
-  useAnimatedValue,
   type DimensionValue,
   type StyleProp,
   type ViewStyle,
@@ -22,13 +22,16 @@ export interface SkeletonProps {
 /** Pulsing placeholder block. Respects reduced motion by settling at rest opacity. */
 export function Skeleton({ width = '100%', height = 16, radius = radiusTokens.xs, style }: SkeletonProps) {
   const { colors } = useTheme();
-  const opacity = useAnimatedValue(0.6);
+  // useState initializer (not useAnimatedValue): react-native-web doesn't
+  // implement useAnimatedValue, and reading a ref during render trips lint.
+  const [opacity] = useState(() => new Animated.Value(0.6));
 
   useEffect(() => {
+    const useNativeDriver = Platform.OS !== 'web';
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.6, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver }),
+        Animated.timing(opacity, { toValue: 0.6, duration: 700, useNativeDriver }),
       ]),
     );
     loop.start();
