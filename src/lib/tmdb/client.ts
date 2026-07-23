@@ -81,14 +81,14 @@ export const tmdb = {
 
   async movieDetails(tmdbId: number): Promise<MovieDetails> {
     const raw = await fetchTmdb<TmdbMovieDetails>(`/movie/${tmdbId}`, {
-      append_to_response: 'credits,videos,recommendations,similar',
+      append_to_response: 'credits,videos,recommendations,similar,watch/providers',
     });
     return normalizeMovieDetails(raw);
   },
 
   async tvDetails(tmdbId: number): Promise<TvDetails> {
     const raw = await fetchTmdb<TmdbTvDetails>(`/tv/${tmdbId}`, {
-      append_to_response: 'credits,videos,recommendations,similar',
+      append_to_response: 'credits,videos,recommendations,similar,watch/providers',
     });
     return normalizeTvDetails(raw);
   },

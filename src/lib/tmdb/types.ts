@@ -75,6 +75,29 @@ export interface TmdbCredits {
   crew?: TmdbCrewMember[];
 }
 
+export interface TmdbWatchProvider {
+  provider_id: number;
+  provider_name?: string;
+  logo_path?: string | null;
+  display_priority?: number;
+}
+
+export interface TmdbWatchCountry {
+  /** JustWatch-powered TMDB "where to watch" page for this title/region. */
+  link?: string;
+  /** Subscription/streaming providers. */
+  flatrate?: TmdbWatchProvider[];
+  rent?: TmdbWatchProvider[];
+  buy?: TmdbWatchProvider[];
+  free?: TmdbWatchProvider[];
+  ads?: TmdbWatchProvider[];
+}
+
+/** Shape of the `watch/providers` append; results keyed by ISO-3166-1 code. */
+export interface TmdbWatchProviders {
+  results?: Record<string, TmdbWatchCountry>;
+}
+
 export interface TmdbMovieDetails extends TmdbMovieSummary {
   runtime?: number | null;
   tagline?: string | null;
@@ -84,6 +107,7 @@ export interface TmdbMovieDetails extends TmdbMovieSummary {
   videos?: { results?: TmdbVideo[] };
   recommendations?: TmdbPaged<TmdbMovieSummary>;
   similar?: TmdbPaged<TmdbMovieSummary>;
+  'watch/providers'?: TmdbWatchProviders;
 }
 
 export interface TmdbSeasonSummary {
@@ -108,6 +132,7 @@ export interface TmdbTvDetails extends TmdbTvSummary {
   videos?: { results?: TmdbVideo[] };
   recommendations?: TmdbPaged<TmdbTvSummary>;
   similar?: TmdbPaged<TmdbTvSummary>;
+  'watch/providers'?: TmdbWatchProviders;
 }
 
 export interface TmdbEpisode {

@@ -25,13 +25,15 @@ Cinematic, modern, premium; simple for casual viewers, deep enough for film/TV n
 | Reviews | One current review per user per title, spoiler flag + hidden-until-revealed text, likes, edit/delete own |
 | Watchlist | Combined movies+TV, sort (added/title/release/community rating), filter by type, mark watched inline |
 | Lists | Named lists, description, public/private, add/remove/reorder, view others' public lists |
+| Shared watchlists | Dedicated couple/group "our watchlist"; invite-only membership (friends only), any member adds/removes titles, "watched together" toggle, owner transfer on leave |
 | Social | Follow/unfollow, followers/following pages, public profiles, block table (data model only) |
+| Friends | Symmetric friend requests (send/accept/decline/cancel) layered on follows; friends hub with request inbox; friends gate shared-watchlist invites |
 | Activity | Chronological feed from followed users; combined entries for log+rate+review; pagination |
 | Settings | Edit profile, avatar, genres, theme (dark default, light supported), legal links, sign out, delete account |
 
 ### Explicitly out of scope (extension points only)
 
-DMs, review comments, group chats/watchlists, collaborative voting, subscriptions, ads,
+DMs, review comments, group chats, collaborative voting, subscriptions, ads,
 ML recommendations, AI chat, streaming-provider integration, watch-history imports,
 Letterboxd import, episode-level reviews, watch parties, creator accounts, moderation
 dashboards, push notifications, CMS, separate Next.js site.
@@ -41,7 +43,8 @@ dashboards, push notifications, CMS, separate Next.js site.
 A new user can: open the app on web/iOS/Android → register → choose a username and finish
 onboarding → search a title → open its page → watchlist it → mark watched → rate it →
 publish a review → track a TV show → find and follow a user → see their activity → like a
-review → create a list → view/edit their profile → sign out and return with the session intact.
+review → create a list → send a friend request and, once accepted, create a shared watchlist
+and invite that friend → view/edit their profile → sign out and return with the session intact.
 
 Plus: no sensitive credentials in the client bundle, RLS enabled and exercised, zero
 TypeScript/lint errors, core tests green, responsive mobile + desktop layouts, useful

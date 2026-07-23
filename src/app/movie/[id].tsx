@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { CastRow } from '@/components/media/CastRow';
 import { MediaRow } from '@/components/media/MediaRow';
 import { RatingSummary } from '@/components/media/RatingSummary';
+import { WhereToWatch } from '@/components/media/WhereToWatch';
 import { Button } from '@/components/primitives/Button';
 import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
@@ -131,6 +132,12 @@ export default function MovieDetailScreen() {
               ) : null}
             </View>
           </View>
+
+          {movie.watch ? (
+            <View style={styles.fullSection}>
+              <WhereToWatch availability={movie.watch} />
+            </View>
+          ) : null}
 
           {movie.cast.length > 0 ? (
             <View style={styles.fullSection}>

@@ -9,6 +9,9 @@ export type MediaTypeRow = 'movie' | 'tv';
 export type WatchStatusRow = 'watchlist' | 'watching' | 'watched' | 'paused' | 'dropped';
 export type ListVisibilityRow = 'public' | 'private';
 export type ActivityTypeRow = 'logged' | 'tv_completed' | 'list_created' | 'followed';
+export type FriendStatusRow = 'pending' | 'accepted';
+export type SharedWatchlistRoleRow = 'owner' | 'member';
+export type SharedWatchlistInviteStatusRow = 'pending' | 'accepted' | 'declined';
 
 export type NotificationPrefs = {
   new_followers?: boolean;
@@ -27,6 +30,7 @@ export type ProfileRow = {
   notification_prefs: NotificationPrefs;
   follower_count: number;
   following_count: number;
+  friend_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +112,53 @@ export type BlockRow = {
   blocker_id: string;
   blocked_id: string;
   created_at: string;
+}
+
+export type FriendshipRow = {
+  id: string;
+  requester_id: string;
+  addressee_id: string;
+  status: FriendStatusRow;
+  created_at: string;
+  responded_at: string | null;
+}
+
+export type SharedWatchlistRow = {
+  id: string;
+  name: string;
+  created_by: string;
+  member_count: number;
+  item_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SharedWatchlistMemberRow = {
+  watchlist_id: string;
+  user_id: string;
+  role: SharedWatchlistRoleRow;
+  joined_at: string;
+}
+
+export type SharedWatchlistItemRow = {
+  id: string;
+  watchlist_id: string;
+  title_id: string;
+  added_by: string | null;
+  note: string | null;
+  watched: boolean;
+  position: number;
+  created_at: string;
+}
+
+export type SharedWatchlistInviteRow = {
+  id: string;
+  watchlist_id: string;
+  inviter_id: string;
+  invitee_id: string;
+  status: SharedWatchlistInviteStatusRow;
+  created_at: string;
+  responded_at: string | null;
 }
 
 export type ListRow = {
@@ -197,6 +248,65 @@ export type LogTitleResult = {
   activity_id: string | null;
 }
 
+/** Minimal profile snippet embedded in social RPC payloads. */
+export type ProfileSnippet = {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_path: string | null;
+}
+
+export type FriendRequestResult = { id: string; status: FriendStatusRow };
+
+/** Shape returned by get_shared_watchlists() (one entry per membership). */
+export type SharedWatchlistSummaryPayload = {
+  id: string;
+  name: string;
+  member_count: number;
+  item_count: number;
+  role: SharedWatchlistRoleRow;
+  updated_at: string;
+}
+
+export type SharedWatchlistsResult = {
+  watchlists: SharedWatchlistSummaryPayload[];
+  pending_invite_count: number;
+}
+
+/** Shape returned by get_pending_shared_watchlist_invites(). */
+export type SharedWatchlistInvitePayload = {
+  id: string;
+  watchlist: { id: string; name: string; item_count: number };
+  inviter: ProfileSnippet;
+  created_at: string;
+}
+
+/** Shape returned by get_shared_watchlist() (full detail). */
+export type SharedWatchlistDetailPayload = {
+  id: string;
+  name: string;
+  member_count: number;
+  item_count: number;
+  created_by: string;
+  my_role: SharedWatchlistRoleRow;
+  members: (ProfileSnippet & { role: SharedWatchlistRoleRow; joined_at: string })[];
+  items: {
+    id: string;
+    note: string | null;
+    watched: boolean;
+    created_at: string;
+    added_by: { id: string; username: string; display_name: string | null } | null;
+    title: {
+      id: string;
+      tmdb_id: number;
+      media_type: MediaTypeRow;
+      title: string;
+      poster_path: string | null;
+      release_date: string | null;
+    };
+  }[];
+}
+
 type Relationship = {
   foreignKeyName: string;
   columns: string[];
@@ -273,6 +383,58 @@ export type Database = {
         ]
       >;
       blocks: TableShape<BlockRow>;
+      friendships: TableShape<
+        FriendshipRow,
+        [
+          ProfileRel<'friendships_requester_id_fkey', 'requester_id'>,
+          ProfileRel<'friendships_addressee_id_fkey', 'addressee_id'>,
+        ]
+      >;
+      shared_watchlists: TableShape<
+        SharedWatchlistRow,
+        [ProfileRel<'shared_watchlists_created_by_fkey', 'created_by'>]
+      >;
+      shared_watchlist_members: TableShape<
+        SharedWatchlistMemberRow,
+        [
+          ProfileRel<'shared_watchlist_members_user_id_fkey', 'user_id'>,
+          {
+            foreignKeyName: 'shared_watchlist_members_watchlist_id_fkey';
+            columns: ['watchlist_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_watchlists';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
+      shared_watchlist_items: TableShape<
+        SharedWatchlistItemRow,
+        [
+          TitleRel<'shared_watchlist_items_title_id_fkey'>,
+          ProfileRel<'shared_watchlist_items_added_by_fkey', 'added_by'>,
+          {
+            foreignKeyName: 'shared_watchlist_items_watchlist_id_fkey';
+            columns: ['watchlist_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_watchlists';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
+      shared_watchlist_invites: TableShape<
+        SharedWatchlistInviteRow,
+        [
+          ProfileRel<'shared_watchlist_invites_inviter_id_fkey', 'inviter_id'>,
+          ProfileRel<'shared_watchlist_invites_invitee_id_fkey', 'invitee_id'>,
+          {
+            foreignKeyName: 'shared_watchlist_invites_watchlist_id_fkey';
+            columns: ['watchlist_id'];
+            isOneToOne: false;
+            referencedRelation: 'shared_watchlists';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
       lists: TableShape<ListRow, [ProfileRel<'lists_user_id_fkey', 'user_id'>]>;
       list_items: TableShape<
         ListItemRow,
@@ -358,12 +520,49 @@ export type Database = {
         Returns: CommunitySummary;
       };
       delete_account: { Args: Record<string, never>; Returns: undefined };
+      are_friends: { Args: { a: string; b: string }; Returns: boolean };
+      send_friend_request: { Args: { p_addressee: string }; Returns: FriendRequestResult };
+      respond_friend_request: {
+        Args: { p_request: string; p_accept: boolean };
+        Returns: FriendRequestResult;
+      };
+      remove_friend: { Args: { p_other: string }; Returns: undefined };
+      create_shared_watchlist: { Args: { p_name: string }; Returns: string };
+      invite_to_shared_watchlist: {
+        Args: { p_list: string; p_invitee: string };
+        Returns: string;
+      };
+      respond_shared_watchlist_invite: {
+        Args: { p_invite: string; p_accept: boolean };
+        Returns: { watchlist_id: string; status: SharedWatchlistInviteStatusRow };
+      };
+      add_shared_watchlist_item: {
+        Args: { p_list: string; p_title_id: string; p_note?: string | null };
+        Returns: string;
+      };
+      remove_shared_watchlist_item: { Args: { p_item: string }; Returns: undefined };
+      set_shared_watchlist_item_watched: {
+        Args: { p_item: string; p_watched: boolean };
+        Returns: undefined;
+      };
+      leave_shared_watchlist: { Args: { p_list: string }; Returns: undefined };
+      remove_shared_watchlist_member: {
+        Args: { p_list: string; p_user: string };
+        Returns: undefined;
+      };
+      get_shared_watchlists: { Args: Record<string, never>; Returns: SharedWatchlistsResult };
+      get_pending_shared_watchlist_invites: {
+        Args: Record<string, never>;
+        Returns: SharedWatchlistInvitePayload[];
+      };
+      get_shared_watchlist: { Args: { p_list: string }; Returns: SharedWatchlistDetailPayload };
     };
     Enums: {
       media_type: MediaTypeRow;
       watch_status: WatchStatusRow;
       list_visibility: ListVisibilityRow;
       activity_type: ActivityTypeRow;
+      friend_status: FriendStatusRow;
     };
     CompositeTypes: Record<string, never>;
   };

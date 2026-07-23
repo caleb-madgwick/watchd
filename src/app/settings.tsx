@@ -26,7 +26,7 @@ import type { NotificationPrefs } from '@/types/database';
 const NOTIFICATION_OPTIONS: { key: keyof NotificationPrefs; label: string; caption: string }[] = [
   { key: 'new_followers', label: 'New followers', caption: 'When someone follows you' },
   { key: 'review_likes', label: 'Review likes', caption: 'When someone likes one of your reviews' },
-  { key: 'friend_activity', label: 'Friend activity', caption: 'Highlights from people you follow' },
+  { key: 'friend_activity', label: 'Friend activity', caption: 'Friend requests and shared watchlists' },
 ];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

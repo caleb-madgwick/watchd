@@ -40,6 +40,29 @@ export interface CrewMember {
   job: string;
 }
 
+export interface WatchProvider {
+  id: number;
+  name: string;
+  logoUrl?: string;
+  /**
+   * Reserved for Tier 2: a direct deep link into the service on this exact
+   * title. Populated only by a future deep-link source (Watchmode, etc.);
+   * always undefined for TMDB-sourced data.
+   */
+  deepLink?: string;
+}
+
+export type WatchOfferKind = 'stream' | 'rent' | 'buy' | 'free' | 'ads';
+
+export interface RegionWatchOffers {
+  /** JustWatch-powered "where to watch" page for this title in this region. */
+  link?: string;
+  offers: Partial<Record<WatchOfferKind, WatchProvider[]>>;
+}
+
+/** Streaming availability keyed by ISO-3166-1 country code, e.g. "AU", "US". */
+export type WatchAvailability = Record<string, RegionWatchOffers>;
+
 export interface MovieDetails extends TitleSummary {
   mediaType: 'movie';
   tagline?: string;
@@ -51,6 +74,8 @@ export interface MovieDetails extends TitleSummary {
   cast: CastMember[];
   trailerUrl?: string;
   related: TitleSummary[];
+  /** Where to watch, by country. Undefined when TMDB has no provider data. */
+  watch?: WatchAvailability;
 }
 
 export interface SeasonSummary {
@@ -77,6 +102,8 @@ export interface TvDetails extends TitleSummary {
   episodeRunTimeMinutes?: number;
   trailerUrl?: string;
   related: TitleSummary[];
+  /** Where to watch, by country. Undefined when TMDB has no provider data. */
+  watch?: WatchAvailability;
 }
 
 export type TitleDetails = MovieDetails | TvDetails;

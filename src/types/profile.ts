@@ -13,6 +13,7 @@ export interface Profile {
   notificationPrefs: NotificationPrefs;
   followerCount: number;
   followingCount: number;
+  friendCount: number;
   createdAt: string;
 }
 
@@ -29,6 +30,7 @@ export function mapProfileRow(row: ProfileRow): Profile {
     notificationPrefs: row.notification_prefs ?? {},
     followerCount: row.follower_count,
     followingCount: row.following_count,
+    friendCount: row.friend_count,
     createdAt: row.created_at,
   };
 }

@@ -2,7 +2,8 @@
 
 A social tracker for movies and TV. Discover what's trending, log what you
 watch, track series progress, rate and review, keep a watchlist, build lists,
-and follow friends — on iOS, Android and the web from one Expo codebase.
+follow people, add friends, and plan viewing together with shared watchlists —
+on iOS, Android and the web from one Expo codebase.
 
 **Stack:** Expo SDK 57 · React Native · React Native Web · Expo Router ·
 TypeScript (strict) · TanStack Query · Zustand · React Hook Form + Zod ·

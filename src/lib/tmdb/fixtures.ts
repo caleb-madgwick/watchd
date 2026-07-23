@@ -66,6 +66,32 @@ export const FIXTURE_MOVIE_DETAILS: Record<number, TmdbMovieDetails> = {
     },
     videos: { results: [{ key: 'YoHD9XEInc0', site: 'YouTube', type: 'Trailer', name: 'Official Trailer', official: true }] },
     recommendations: { page: 1, total_pages: 1, total_results: 4, results: [FIXTURE_MOVIES[1], FIXTURE_MOVIES[2], FIXTURE_MOVIES[6], FIXTURE_MOVIES[4]] },
+    'watch/providers': {
+      results: {
+        AU: {
+          link: 'https://www.themoviedb.org/movie/27205/watch?locale=AU',
+          flatrate: [
+            { provider_id: 8, provider_name: 'Netflix', logo_path: '/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg', display_priority: 0 },
+            { provider_id: 337, provider_name: 'Disney Plus', logo_path: '/97yvRBw1GzX7fXprcF80er19ot.jpg', display_priority: 1 },
+          ],
+          rent: [
+            { provider_id: 2, provider_name: 'Apple TV', logo_path: '/peURlLlr8jggOwK53fJ5wdQl05y.jpg', display_priority: 3 },
+          ],
+          buy: [
+            { provider_id: 2, provider_name: 'Apple TV', logo_path: '/peURlLlr8jggOwK53fJ5wdQl05y.jpg', display_priority: 3 },
+          ],
+        },
+        US: {
+          link: 'https://www.themoviedb.org/movie/27205/watch?locale=US',
+          flatrate: [
+            { provider_id: 9, provider_name: 'Amazon Prime Video', logo_path: '/pvske1MyAoymrs5bguRfVqYiM9a.jpg', display_priority: 0 },
+          ],
+          buy: [
+            { provider_id: 2, provider_name: 'Apple TV', logo_path: '/peURlLlr8jggOwK53fJ5wdQl05y.jpg', display_priority: 3 },
+          ],
+        },
+      },
+    },
   },
 };
 
@@ -100,6 +126,22 @@ export const FIXTURE_TV_DETAILS: Record<number, TmdbTvDetails> = {
     },
     videos: { results: [{ key: 'XZ8daibM3AE', site: 'YouTube', type: 'Trailer', name: 'Series Trailer', official: true }] },
     recommendations: { page: 1, total_pages: 1, total_results: 3, results: [FIXTURE_TV[4], FIXTURE_TV[3], FIXTURE_TV[1]] },
+    'watch/providers': {
+      results: {
+        AU: {
+          link: 'https://www.themoviedb.org/tv/1396/watch?locale=AU',
+          flatrate: [
+            { provider_id: 8, provider_name: 'Netflix', logo_path: '/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg', display_priority: 0 },
+          ],
+        },
+        US: {
+          link: 'https://www.themoviedb.org/tv/1396/watch?locale=US',
+          flatrate: [
+            { provider_id: 8, provider_name: 'Netflix', logo_path: '/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg', display_priority: 0 },
+          ],
+        },
+      },
+    },
   },
 };
 

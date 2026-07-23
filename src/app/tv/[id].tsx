@@ -1,12 +1,14 @@
 import { Image } from 'expo-image';
-import { Link, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { CastRow } from '@/components/media/CastRow';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { MediaRow } from '@/components/media/MediaRow';
 import { RatingSummary } from '@/components/media/RatingSummary';
+import { WhereToWatch } from '@/components/media/WhereToWatch';
 import { Button } from '@/components/primitives/Button';
 import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
@@ -128,6 +130,12 @@ export default function TvDetailScreen() {
             </View>
           </View>
 
+          {tv.watch ? (
+            <View style={styles.fullSection}>
+              <WhereToWatch availability={tv.watch} />
+            </View>
+          ) : null}
+
           {tv.seasons.length > 0 ? (
             <View style={styles.fullSection}>
               <Text variant="title3" style={styles.sectionHeading}>
@@ -139,18 +147,18 @@ export default function TvDetailScreen() {
                 contentContainerStyle={styles.seasonsRow}
               >
                 {tv.seasons.map((season) => (
-                  <Link key={season.seasonNumber} href={`/tv/${tmdbId}/season/${season.seasonNumber}`} asChild>
-                    <Pressable
-                      accessibilityRole="link"
-                      accessibilityLabel={`${season.name}, ${season.episodeCount} episodes`}
-                      style={({ pressed }) => [
-                        styles.seasonCard,
-                        {
-                          backgroundColor: pressed ? colors.surfaceHigh : colors.surface,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                    >
+                  <LinkPressable
+                    key={season.seasonNumber}
+                    href={`/tv/${tmdbId}/season/${season.seasonNumber}`}
+                    accessibilityLabel={`${season.name}, ${season.episodeCount} episodes`}
+                    style={({ pressed, hovered }) => [
+                      styles.seasonCard,
+                      {
+                        backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+                        borderColor: colors.border,
+                      },
+                    ]}
+                  >
                       {season.posterUrl ? (
                         <Image
                           source={{ uri: season.posterUrl }}
@@ -169,8 +177,7 @@ export default function TvDetailScreen() {
                           {season.airYear ? ` · ${season.airYear}` : ''}
                         </Text>
                       </View>
-                    </Pressable>
-                  </Link>
+                  </LinkPressable>
                 ))}
               </ScrollView>
             </View>

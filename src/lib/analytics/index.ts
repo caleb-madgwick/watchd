@@ -24,6 +24,11 @@ export type AnalyticsEvent =
   | { name: 'review_submitted'; mediaType: 'movie' | 'tv'; tmdbId: number; hasSpoilers: boolean }
   | { name: 'tv_progress_updated'; tmdbId: number; completed: boolean }
   | { name: 'user_followed' }
+  | { name: 'friend_request_sent' }
+  | { name: 'friend_accepted' }
+  | { name: 'shared_watchlist_created' }
+  | { name: 'shared_watchlist_invite_sent' }
+  | { name: 'shared_watchlist_item_added' }
   | { name: 'list_created'; visibility: 'public' | 'private' }
   | { name: 'account_deleted' };
 

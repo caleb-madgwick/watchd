@@ -4,6 +4,7 @@ import {
   normalizeMulti,
   normalizePaged,
   normalizeTvDetails,
+  normalizeWatchProviders,
   pickTrailerUrl,
 } from './normalize';
 import type { TmdbMovieDetails, TmdbTvDetails } from './types';
@@ -121,6 +122,39 @@ describe('normalizeMovieDetails', () => {
     expect(details.runtimeMinutes).toBeUndefined();
     expect(details.related).toHaveLength(1);
     expect(details.related[0].tmdbId).toBe(7);
+  });
+});
+
+describe('normalizeWatchProviders', () => {
+  it('maps flatrate to stream, sorts by display_priority, and builds logo URLs', () => {
+    const availability = normalizeWatchProviders({
+      results: {
+        AU: {
+          link: 'https://example.com/watch',
+          flatrate: [
+            { provider_id: 337, provider_name: 'Disney Plus', logo_path: '/disney.jpg', display_priority: 2 },
+            { provider_id: 8, provider_name: 'Netflix', logo_path: '/netflix.jpg', display_priority: 0 },
+          ],
+          rent: [{ provider_id: 2, provider_name: 'Apple TV', logo_path: '/apple.jpg', display_priority: 1 }],
+        },
+      },
+    });
+
+    const au = availability?.AU;
+    expect(au?.link).toBe('https://example.com/watch');
+    expect(au?.offers.stream?.map((p) => p.name)).toEqual(['Netflix', 'Disney Plus']);
+    expect(au?.offers.stream?.[0].logoUrl).toBe('https://image.tmdb.org/t/p/w92/netflix.jpg');
+    expect(au?.offers.stream?.[0].deepLink).toBeUndefined();
+    expect(au?.offers.rent?.[0].name).toBe('Apple TV');
+    expect(au?.offers.buy).toBeUndefined();
+  });
+
+  it('drops regions with a link but no offers, and returns undefined when empty', () => {
+    expect(
+      normalizeWatchProviders({ results: { US: { link: 'https://example.com/watch' } } }),
+    ).toBeUndefined();
+    expect(normalizeWatchProviders(undefined)).toBeUndefined();
+    expect(normalizeWatchProviders({})).toBeUndefined();
   });
 });
 

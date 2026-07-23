@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ActivityCardMenu } from '@/components/activity/ActivityCardMenu';
 import { Avatar } from '@/components/primitives/Avatar';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { RatingStars } from '@/components/primitives/RatingStars';
@@ -10,6 +11,7 @@ import { SpoilerText } from '@/components/primitives/SpoilerText';
 import { Text } from '@/components/primitives/Text';
 import { avatarPublicUrl } from '@/lib/supabase/storage';
 import { posterUrl } from '@/lib/tmdb/images';
+import { useCurrentUserId } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
 import type { FeedItem } from '@/types/database';
@@ -20,6 +22,8 @@ import { titleHref, yearFromDate } from '@/utils/titles';
 /** One feed entry: combined verbs, title chip, review preview, timestamps. */
 export function ActivityCard({ item }: { item: FeedItem }) {
   const { colors } = useTheme();
+  const currentUserId = useCurrentUserId();
+  const isOwn = item.actor.id === currentUserId;
   const displayName = item.actor.display_name?.trim() || item.actor.username;
   const rating = typeof item.metadata.rating === 'number' ? item.metadata.rating : null;
 
@@ -48,7 +52,10 @@ export function ActivityCard({ item }: { item: FeedItem }) {
             </View>
           </Pressable>
         </Link>
-        {rating ? <RatingStars value={rating} size={12} /> : null}
+        <View style={styles.headerTrailing}>
+          {rating ? <RatingStars value={rating} size={12} /> : null}
+          {isOwn ? <ActivityCardMenu item={item} /> : null}
+        </View>
       </View>
 
       {item.title ? (
@@ -149,6 +156,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm + 2,
     flex: 1,
+  },
+  headerTrailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   actorText: {
     flex: 1,

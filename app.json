@@ -45,7 +45,8 @@
           "photosPermission": "Watchd uses your photo library so you can choose a profile picture."
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

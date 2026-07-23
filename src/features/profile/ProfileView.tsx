@@ -7,11 +7,14 @@ import { ActivityCard } from '@/components/activity/ActivityCard';
 import { ListCard } from '@/components/lists/ListCard';
 import { MediaRow } from '@/components/media/MediaRow';
 import { Avatar } from '@/components/primitives/Avatar';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { RatingStars } from '@/components/primitives/RatingStars';
 import { Text } from '@/components/primitives/Text';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
+import { FriendButton } from '@/features/friends/FriendButton';
+import { usePendingFriendRequests } from '@/features/friends/hooks';
 import { useUserLists } from '@/features/lists/hooks';
 import { useUserReviews, useToggleReviewLike } from '@/features/reviews/hooks';
 import { FollowButton } from '@/features/social/FollowButton';
@@ -72,7 +75,11 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
 
   const stats = useProfileStats(profile.id);
   const favourites = useUserTitles(profile.id, { favouritesOnly: true, limit: 12 });
-  const watchedMovies = useUserTitles(profile.id, { mediaType: 'movie', status: 'watched', limit: 12 });
+  const watchedMovies = useUserTitles(profile.id, {
+    mediaType: 'movie',
+    status: 'watched',
+    limit: 12,
+  });
   const watchedShows = useUserTitles(profile.id, { mediaType: 'tv', status: 'watched', limit: 12 });
   const watchlist = useUserTitles(profile.id, { status: 'watchlist', limit: 12 });
   const reviews = useUserReviews(profile.id);
@@ -80,6 +87,8 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
   const diary = useDiary(profile.id);
   const activity = useUserActivity(profile.id);
   const toggleLike = useToggleReviewLike();
+  const pendingRequests = usePendingFriendRequests();
+  const pendingCount = isSelf ? (pendingRequests.data?.length ?? 0) : 0;
 
   const feedItems = (activity.data ?? [])
     .map((row) => toFeedItem(row, profile))
@@ -125,6 +134,25 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                   </Text>
                 </Pressable>
               </Link>
+              {isSelf ? (
+                <Link href="/friends" asChild>
+                  <Pressable accessibilityRole="link" hitSlop={6}>
+                    <Text variant="subhead" color="secondary">
+                      <Text variant="headline">{profile.friendCount}</Text> friends
+                      {pendingCount > 0 ? (
+                        <Text variant="subhead" color="accent">
+                          {' '}
+                          · {pendingCount} new
+                        </Text>
+                      ) : null}
+                    </Text>
+                  </Pressable>
+                </Link>
+              ) : (
+                <Text variant="subhead" color="secondary">
+                  <Text variant="headline">{profile.friendCount}</Text> friends
+                </Text>
+              )}
             </View>
           </View>
           <View style={styles.headerAction}>
@@ -136,12 +164,17 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                 onPress={() => router.push('/settings')}
               />
             ) : (
-              <FollowButton targetUserId={profile.id} targetUsername={profile.username} />
+              <>
+                <FollowButton targetUserId={profile.id} targetUsername={profile.username} />
+                <FriendButton targetUserId={profile.id} />
+              </>
             )}
           </View>
         </View>
 
-        <View style={[styles.stats, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          style={[styles.stats, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
           <StatCell value={stats.data?.watchedMovies ?? '–'} label="movies" />
           <StatCell value={stats.data?.watchedShows ?? '–'} label="shows" />
           <View style={styles.statCell}>
@@ -164,6 +197,26 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
           <StatCell value={stats.data?.reviews ?? '–'} label="reviews" />
         </View>
 
+        {isSelf ? (
+          <View style={styles.quickLinks}>
+            <LinkPressable
+              href="/shared"
+              style={({ pressed, hovered }) => [
+                styles.quickLink,
+                {
+                  backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <Text variant="subhead">Shared watchlists</Text>
+              <Text variant="caption" color="muted">
+                Plan what to watch with friends
+              </Text>
+            </LinkPressable>
+          </View>
+        ) : null}
+
         {!hasAnyContent && !stats.isLoading ? (
           <EmptyState
             icon="film-outline"
@@ -179,7 +232,11 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
         ) : (
           <View style={styles.sections}>
             {favourites.data && favourites.data.length > 0 ? (
-              <MediaRow heading="Favourites" titles={favourites.data.map((r) => r.title)} posterWidth={104} />
+              <MediaRow
+                heading="Favourites"
+                titles={favourites.data.map((r) => r.title)}
+                posterWidth={104}
+              />
             ) : null}
 
             {feedItems.length > 0 ? (
@@ -229,7 +286,10 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                   {diary.data.slice(0, 3).map((entry) => (
                     <View
                       key={entry.id}
-                      style={[styles.diaryRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                      style={[
+                        styles.diaryRow,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
                     >
                       <Text variant="caption" color="muted" style={styles.diaryDate}>
                         {formatDate(entry.watchedAt)}
@@ -287,7 +347,8 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                       likedByMe={review.likedByMe}
                       onToggleLike={
                         session
-                          ? () => toggleLike.mutate({ reviewId: review.id, like: !review.likedByMe })
+                          ? () =>
+                              toggleLike.mutate({ reviewId: review.id, like: !review.likedByMe })
                           : undefined
                       }
                       numberOfLines={4}
@@ -375,6 +436,8 @@ const styles = StyleSheet.create({
   },
   headerAction: {
     marginTop: spacing.xs,
+    gap: spacing.sm,
+    alignItems: 'flex-end',
   },
   stats: {
     flexDirection: 'row',
@@ -383,6 +446,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     paddingVertical: spacing.md,
+  },
+  quickLinks: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  quickLink: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: 2,
   },
   statCell: {
     flex: 1,

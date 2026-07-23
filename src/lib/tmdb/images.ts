@@ -9,6 +9,7 @@ const IMAGE_BASE = 'https://image.tmdb.org/t/p/';
 export type PosterSize = 'w185' | 'w342' | 'w500' | 'w780';
 export type BackdropSize = 'w780' | 'w1280' | 'original';
 export type ProfileSize = 'w185' | 'h632';
+export type LogoSize = 'w45' | 'w92' | 'w154' | 'original';
 
 function buildUrl(path: string | null | undefined, size: string): string | undefined {
   if (!path) return undefined;
@@ -30,4 +31,9 @@ export function profileUrl(path: string | null | undefined, size: ProfileSize = 
 
 export function stillUrl(path: string | null | undefined) {
   return buildUrl(path, 'w300');
+}
+
+/** Watch-provider (JustWatch) logos use their own size ladder. */
+export function logoUrl(path: string | null | undefined, size: LogoSize = 'w92') {
+  return buildUrl(path, size);
 }

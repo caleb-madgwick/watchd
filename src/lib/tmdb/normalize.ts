@@ -3,7 +3,7 @@
  * handled here so the UI can rely on clean shapes.
  */
 
-import { backdropUrl, posterUrl, profileUrl, stillUrl } from './images';
+import { backdropUrl, logoUrl, posterUrl, profileUrl, stillUrl } from './images';
 import type {
   TmdbCredits,
   TmdbMovieDetails,
@@ -16,6 +16,9 @@ import type {
   TmdbTvDetails,
   TmdbTvSummary,
   TmdbVideo,
+  TmdbWatchCountry,
+  TmdbWatchProvider,
+  TmdbWatchProviders,
 } from './types';
 import type {
   CastMember,
@@ -23,10 +26,14 @@ import type {
   MovieDetails,
   Paginated,
   PersonDetails,
+  RegionWatchOffers,
   SeasonDetails,
   SeasonSummary,
   TitleSummary,
   TvDetails,
+  WatchAvailability,
+  WatchOfferKind,
+  WatchProvider,
 } from '@/types/domain';
 import { yearFromDate } from '@/utils/titles';
 
@@ -143,6 +150,55 @@ function mergeRelated<Raw>(
   return out;
 }
 
+/** TMDB group key → domain offer kind. `flatrate` is TMDB's term for streaming. */
+const OFFER_KINDS: { tmdbKey: keyof TmdbWatchCountry; kind: WatchOfferKind }[] = [
+  { tmdbKey: 'flatrate', kind: 'stream' },
+  { tmdbKey: 'free', kind: 'free' },
+  { tmdbKey: 'ads', kind: 'ads' },
+  { tmdbKey: 'rent', kind: 'rent' },
+  { tmdbKey: 'buy', kind: 'buy' },
+];
+
+function normalizeProviderList(list: TmdbWatchProvider[] | undefined): WatchProvider[] {
+  return (list ?? [])
+    .slice()
+    // JustWatch's terms require preserving their ordering.
+    .sort((a, b) => (a.display_priority ?? 999) - (b.display_priority ?? 999))
+    .filter((p) => p.provider_name)
+    .map((p) => ({
+      id: p.provider_id,
+      name: p.provider_name as string,
+      logoUrl: logoUrl(p.logo_path),
+      // deepLink intentionally omitted — reserved for a future deep-link source.
+    }));
+}
+
+/**
+ * Normalise the `watch/providers` append into region-keyed availability.
+ * TMDB returns every country in one payload, so region switching is a pure
+ * client-side lookup — no refetch needed.
+ */
+export function normalizeWatchProviders(
+  raw: TmdbWatchProviders | undefined,
+): WatchAvailability | undefined {
+  const results = raw?.results;
+  if (!results) return undefined;
+
+  const availability: WatchAvailability = {};
+  for (const [region, country] of Object.entries(results)) {
+    const offers: RegionWatchOffers['offers'] = {};
+    for (const { tmdbKey, kind } of OFFER_KINDS) {
+      const providers = normalizeProviderList(country[tmdbKey] as TmdbWatchProvider[] | undefined);
+      if (providers.length > 0) offers[kind] = providers;
+    }
+    // Skip regions with a bare link but no actual offers.
+    if (Object.keys(offers).length === 0) continue;
+    availability[region] = { link: country.link?.trim() || undefined, offers };
+  }
+
+  return Object.keys(availability).length > 0 ? availability : undefined;
+}
+
 export function normalizeMovieDetails(raw: TmdbMovieDetails): MovieDetails {
   return {
     ...normalizeMovieSummary(raw),
@@ -156,6 +212,7 @@ export function normalizeMovieDetails(raw: TmdbMovieDetails): MovieDetails {
     cast: normalizeCast(raw.credits),
     trailerUrl: pickTrailerUrl(raw.videos),
     related: mergeRelated(raw.recommendations, raw.similar, normalizeMovieSummary),
+    watch: normalizeWatchProviders(raw['watch/providers']),
   };
 }
 
@@ -194,6 +251,7 @@ export function normalizeTvDetails(raw: TmdbTvDetails): TvDetails {
     episodeRunTimeMinutes: raw.episode_run_time?.find((r) => r > 0),
     trailerUrl: pickTrailerUrl(raw.videos),
     related: mergeRelated(raw.recommendations, raw.similar, normalizeTvSummary),
+    watch: normalizeWatchProviders(raw['watch/providers']),
   };
 }
 
