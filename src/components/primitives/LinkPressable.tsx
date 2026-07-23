@@ -2,6 +2,7 @@ import { Link, type Href } from 'expo-router';
 import { useState } from 'react';
 import {
   Pressable,
+  StyleSheet,
   type GestureResponderEvent,
   type MouseEvent,
   type PressableProps,
@@ -25,9 +26,10 @@ export interface LinkPressableProps extends Omit<PressableProps, 'style' | 'chil
  *
  * expo-router's `Link asChild` clones its child to merge navigation props and
  * SILENTLY DROPS a function-form `style` (verified: the rendered element gets
- * no style attribute at all). Never pass a style function to a Pressable
- * inside `Link asChild` — use this component instead: it tracks press/hover
- * state itself and always passes the resolved, static style down.
+ * no style attribute at all), and it throws on array styles. Never put a
+ * Pressable with a function or array style inside `Link asChild` — use this
+ * component instead: it tracks press/hover state itself and always passes a
+ * single flattened style object down.
  */
 export function LinkPressable({
   href,
@@ -42,7 +44,9 @@ export function LinkPressable({
   const [pressed, setPressed] = useState(false);
   const [hovered, setHovered] = useState(false);
 
-  const resolvedStyle = typeof style === 'function' ? style({ pressed, hovered }) : style;
+  const resolvedStyle = StyleSheet.flatten(
+    typeof style === 'function' ? style({ pressed, hovered }) : style,
+  );
 
   return (
     <Link href={href} asChild>
