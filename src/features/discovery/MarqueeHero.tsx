@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
@@ -13,6 +13,7 @@ import { mediaTypeLabel, titleHref } from '@/utils/titles';
 
 const BULB_COUNT = 14;
 const ROTATE_MS = 6000;
+const STAGE_HEIGHT = 230;
 
 /** One row of marquee bulbs; three phase groups chase each other. */
 function BulbRow({ phases }: { phases: [Animated.Value, Animated.Value, Animated.Value] }) {
@@ -36,12 +37,81 @@ function BulbRow({ phases }: { phases: [Animated.Value, Animated.Value, Animated
   );
 }
 
-/** "NOW SHOWING" marquee carousel: rotating featured titles in a bulb-lit frame. */
+function Slide({ title, width }: { title: TitleSummary; width: number }) {
+  return (
+    <LinkPressable
+      href={titleHref(title.mediaType, title.tmdbId)}
+      accessibilityLabel={`Now showing: ${title.title}`}
+      style={({ pressed }) => ({
+        width,
+        height: STAGE_HEIGHT,
+        opacity: pressed ? 0.92 : 1,
+      })}
+    >
+      <View style={styles.slide}>
+        {title.backdropUrl ? (
+          <Image
+            source={{ uri: title.backdropUrl }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            transition={250}
+            accessibilityLabel={`${title.title} backdrop`}
+          />
+        ) : null}
+        <LinearGradient
+          colors={['rgba(5,6,8,0.05)', 'rgba(5,6,8,0.45)', 'rgba(5,6,8,0.92)']}
+          locations={[0, 0.55, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.slideContent}>
+          <View style={[styles.nowShowing, { backgroundColor: palette.marigold400 }]}>
+            <Text
+              style={{
+                fontFamily: fontFamily.display,
+                fontSize: 12,
+                lineHeight: 17,
+                color: '#2B1F04',
+                letterSpacing: 2,
+              }}
+            >
+              NOW SHOWING
+            </Text>
+          </View>
+          <Text
+            numberOfLines={2}
+            style={{
+              fontFamily: fontFamily.display,
+              fontSize: 30,
+              lineHeight: 38,
+              color: palette.cream,
+              letterSpacing: 0.6,
+            }}
+          >
+            {title.title.toUpperCase()}
+          </Text>
+          <Text variant="subhead" style={{ color: 'rgba(244,241,234,0.8)' }}>
+            {[title.releaseYear, mediaTypeLabel(title.mediaType), 'Tap for tonight’s pick']
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        </View>
+      </View>
+    </LinkPressable>
+  );
+}
+
+/**
+ * "NOW SHOWING" marquee carousel: a swipeable paged slider of featured
+ * titles in a bulb-lit frame. Auto-advances, pausing on hover and touch.
+ */
 export function MarqueeHero({ titles }: { titles: TitleSummary[] }) {
   const { scheme } = useTheme();
   const [index, setIndex] = useState(0);
-  const [textFade] = useState(() => new Animated.Value(1));
+  const [stageWidth, setStageWidth] = useState(0);
+  const listRef = useRef<FlatList<TitleSummary>>(null);
   const pausedRef = useRef(false);
+  const indexRef = useRef(0);
+  indexRef.current = index;
   const [phases] = useState<[Animated.Value, Animated.Value, Animated.Value]>(() => [
     new Animated.Value(1),
     new Animated.Value(0.4),
@@ -68,30 +138,30 @@ export function MarqueeHero({ titles }: { titles: TitleSummary[] }) {
   }, [phases]);
 
   const goTo = (next: number) => {
-    if (next === index || titles.length === 0) return;
-    if (prefersReducedMotion()) {
-      setIndex(next % titles.length);
-      return;
-    }
-    Animated.timing(textFade, { toValue: 0, duration: 160, useNativeDriver: true }).start(() => {
-      setIndex(next % titles.length);
-      Animated.timing(textFade, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    if (titles.length === 0 || stageWidth === 0) return;
+    const target = ((next % titles.length) + titles.length) % titles.length;
+    listRef.current?.scrollToOffset({
+      offset: target * stageWidth,
+      animated: !prefersReducedMotion(),
     });
+    setIndex(target);
   };
 
-  // Auto-rotate; paused while hovered, off entirely under reduced motion.
   const goToRef = useRef(goTo);
-  goToRef.current = goTo;
   useEffect(() => {
-    if (prefersReducedMotion() || titles.length < 2) return;
+    goToRef.current = goTo;
+  });
+
+  // Auto-rotate; paused on hover/touch, off entirely under reduced motion.
+  useEffect(() => {
+    if (prefersReducedMotion() || titles.length < 2 || stageWidth === 0) return;
     const timer = setInterval(() => {
-      if (!pausedRef.current) goToRef.current(index + 1);
+      if (!pausedRef.current) goToRef.current(indexRef.current + 1);
     }, ROTATE_MS);
     return () => clearInterval(timer);
-  }, [index, titles.length]);
+  }, [titles.length, stageWidth]);
 
-  const title = titles[Math.min(index, titles.length - 1)];
-  if (!title) return null;
+  if (titles.length === 0) return null;
 
   const frame = scheme === 'dark' ? '#241C15' : '#4A3423';
 
@@ -107,88 +177,53 @@ export function MarqueeHero({ titles }: { titles: TitleSummary[] }) {
         }}
       >
         <BulbRow phases={phases} />
-        <LinkPressable
-          href={titleHref(title.mediaType, title.tmdbId)}
-          accessibilityLabel={`Now showing: ${title.title}`}
-          style={({ pressed }) => ({
-            borderRadius: radius.sm,
-            overflow: 'hidden',
-            opacity: pressed ? 0.92 : 1,
-          })}
+        <View
+          style={styles.stage}
+          onLayout={(event) => setStageWidth(event.nativeEvent.layout.width)}
         >
-          <View style={styles.stage}>
-            {title.backdropUrl ? (
-              // expo-image crossfades automatically when the source changes.
-              <Image
-                source={{ uri: title.backdropUrl }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                transition={550}
-                accessibilityLabel={`${title.title} backdrop`}
-              />
-            ) : null}
-            <LinearGradient
-              colors={['rgba(5,6,8,0.05)', 'rgba(5,6,8,0.45)', 'rgba(5,6,8,0.92)']}
-              locations={[0, 0.55, 1]}
-              style={StyleSheet.absoluteFill}
+          {stageWidth > 0 ? (
+            <FlatList
+              ref={listRef}
+              data={titles}
+              keyExtractor={(item) => `${item.mediaType}-${item.tmdbId}`}
+              renderItem={({ item }) => <Slide title={item} width={stageWidth} />}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              getItemLayout={(_, i) => ({ length: stageWidth, offset: stageWidth * i, index: i })}
+              onScrollBeginDrag={() => {
+                pausedRef.current = true;
+              }}
+              onMomentumScrollEnd={(event) => {
+                pausedRef.current = false;
+                const newIndex = Math.round(event.nativeEvent.contentOffset.x / stageWidth);
+                setIndex(Math.max(0, Math.min(newIndex, titles.length - 1)));
+              }}
             />
-            <Animated.View style={[styles.stageContent, { opacity: textFade }]}>
-              <View style={[styles.nowShowing, { backgroundColor: palette.marigold400 }]}>
-                <Text
-                  style={{
-                    fontFamily: fontFamily.display,
-                    fontSize: 12,
-                    lineHeight: 17,
-                    color: '#2B1F04',
-                    letterSpacing: 2,
-                  }}
-                >
-                  NOW SHOWING
-                </Text>
-              </View>
-              <Text
-                numberOfLines={2}
-                style={{
-                  fontFamily: fontFamily.display,
-                  fontSize: 30,
-                  lineHeight: 38,
-                  color: palette.cream,
-                  letterSpacing: 0.6,
-                }}
-              >
-                {title.title.toUpperCase()}
-              </Text>
-              <Text variant="subhead" style={{ color: 'rgba(244,241,234,0.8)' }}>
-                {[title.releaseYear, mediaTypeLabel(title.mediaType), 'Tap for tonight’s pick']
-                  .filter(Boolean)
-                  .join(' · ')}
-              </Text>
-            </Animated.View>
+          ) : null}
 
-            {titles.length > 1 ? (
-              <View style={styles.dots}>
-                {titles.map((item, i) => (
-                  <Pressable
-                    key={`${item.mediaType}-${item.tmdbId}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Show feature ${i + 1} of ${titles.length}: ${item.title}`}
-                    accessibilityState={{ selected: i === index }}
-                    onPress={() => goTo(i)}
-                    hitSlop={8}
-                    style={[
-                      styles.dot,
-                      {
-                        backgroundColor:
-                          i === index ? palette.marigold400 : 'rgba(244,241,234,0.35)',
-                        width: i === index ? 18 : 7,
-                      },
-                    ]}
-                  />
-                ))}
-              </View>
-            ) : null}
-          </View>
-        </LinkPressable>
+          {titles.length > 1 ? (
+            <View style={styles.dots}>
+              {titles.map((item, i) => (
+                <Pressable
+                  key={`${item.mediaType}-${item.tmdbId}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Show feature ${i + 1} of ${titles.length}: ${item.title}`}
+                  accessibilityState={{ selected: i === index }}
+                  onPress={() => goTo(i)}
+                  hitSlop={8}
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: i === index ? palette.marigold400 : 'rgba(244,241,234,0.35)',
+                      width: i === index ? 18 : 7,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          ) : null}
+        </View>
         <BulbRow phases={phases} />
       </View>
     </View>
@@ -219,13 +254,16 @@ const styles = StyleSheet.create({
     boxShadow: '0px 0px 6px rgba(245,178,26,0.8)',
   },
   stage: {
-    height: 230,
+    height: STAGE_HEIGHT,
     borderRadius: radius.sm,
     overflow: 'hidden',
     backgroundColor: '#0B0D10',
+  },
+  slide: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
-  stageContent: {
+  slideContent: {
     padding: spacing.xl,
     paddingBottom: spacing['2xl'] + spacing.sm,
     gap: spacing.sm,
