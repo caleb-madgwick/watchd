@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Text } from './Text';
 import { useTheme } from '@/theme/ThemeContext';
@@ -8,6 +8,8 @@ export interface SegmentedControlProps<T extends string> {
   options: { value: T; label: string }[];
   value: T;
   onChange: (value: T) => void;
+  /** Intrinsic-width chips in a horizontal scroller instead of an even split. */
+  scrollable?: boolean;
 }
 
 /**
@@ -18,10 +20,11 @@ export function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
+  scrollable = false,
 }: SegmentedControlProps<T>) {
   const { colors } = useTheme();
 
-  return (
+  const chips = (
     <View accessibilityRole="tablist" style={styles.track}>
       {options.map((option) => {
         const selected = option.value === value;
@@ -34,6 +37,7 @@ export function SegmentedControl<T extends string>({
             onPress={() => onChange(option.value)}
             style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
               styles.segment,
+              scrollable ? styles.segmentFixed : styles.segmentFlex,
               {
                 backgroundColor: selected
                   ? colors.accent
@@ -63,6 +67,15 @@ export function SegmentedControl<T extends string>({
       })}
     </View>
   );
+
+  if (scrollable) {
+    return (
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {chips}
+      </ScrollView>
+    );
+  }
+  return chips;
 }
 
 const styles = StyleSheet.create({
@@ -71,13 +84,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   segment: {
-    flex: 1,
     height: 38,
     borderRadius: 4,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  segmentFlex: {
+    flex: 1,
     paddingHorizontal: spacing.sm,
+  },
+  segmentFixed: {
+    paddingHorizontal: spacing.lg,
   },
   label: {
     fontFamily: fontFamily.display,

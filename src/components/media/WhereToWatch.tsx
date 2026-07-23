@@ -33,7 +33,14 @@ function regionName(code: string): string {
   }
 }
 
-export function WhereToWatch({ availability }: { availability?: WatchAvailability }) {
+export function WhereToWatch({
+  availability,
+  compact = false,
+}: {
+  availability?: WatchAvailability;
+  /** One quiet caption + small logo strip instead of the full grouped panel. */
+  compact?: boolean;
+}) {
   const { colors } = useTheme();
   const { region, setRegion } = useRegion();
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -56,6 +63,114 @@ export function WhereToWatch({ availability }: { availability?: WatchAvailabilit
     const url = provider.deepLink ?? current?.link;
     if (url) void WebBrowser.openBrowserAsync(url);
   };
+
+  const regionModal = (
+    <Modal visible={pickerOpen} onClose={() => setPickerOpen(false)} title="Choose region">
+      {regionCodes.map((code) => {
+        const selected = code === region;
+        return (
+          <Pressable
+            key={code}
+            accessibilityRole="button"
+            accessibilityState={{ selected }}
+            onPress={() => {
+              setRegion(code);
+              setPickerOpen(false);
+            }}
+            style={({ pressed }) => [
+              styles.regionRow,
+              { borderBottomColor: colors.border, backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
+            ]}
+          >
+            <Text variant="body" color={selected ? 'accent' : 'primary'}>
+              {regionName(code)}
+            </Text>
+            {selected ? <Ionicons name="checkmark" size={18} color={colors.accent} /> : null}
+          </Pressable>
+        );
+      })}
+    </Modal>
+  );
+
+  if (compact) {
+    // One provider per id, best offer first (stream beats rent, etc.).
+    const seen = new Set<number>();
+    const providers: WatchProvider[] = [];
+    for (const { kind } of GROUPS) {
+      for (const provider of current?.offers[kind] ?? []) {
+        if (seen.has(provider.id)) continue;
+        seen.add(provider.id);
+        providers.push(provider);
+      }
+    }
+
+    return (
+      <View style={styles.compactWrap}>
+        <View style={styles.compactHeader}>
+          <Text variant="caption" color="muted" style={styles.compactLabel}>
+            Where to watch · via JustWatch
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Region: ${regionName(region)}. Change region`}
+            onPress={() => setPickerOpen(true)}
+            style={({ pressed }) => [
+              styles.compactRegion,
+              { opacity: pressed ? 0.7 : 1 },
+            ]}
+          >
+            <Text variant="caption" color="secondary">
+              {region}
+            </Text>
+            <Ionicons name="chevron-down" size={12} color={colors.textMuted} />
+          </Pressable>
+        </View>
+        {providers.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.compactRow}
+          >
+            {providers.slice(0, 12).map((provider) => (
+              <Pressable
+                key={provider.id}
+                accessibilityRole="link"
+                accessibilityLabel={`Watch on ${provider.name}`}
+                onPress={() => openLink(provider)}
+                style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+              >
+                {provider.logoUrl ? (
+                  <Image
+                    source={{ uri: provider.logoUrl }}
+                    style={[styles.compactLogo, { backgroundColor: colors.surfaceRaised, borderColor: colors.border }]}
+                    contentFit="cover"
+                    transition={150}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.compactLogo,
+                      styles.logoFallback,
+                      { backgroundColor: colors.surfaceRaised, borderColor: colors.border },
+                    ]}
+                  >
+                    <Text variant="caption" color="muted">
+                      {provider.name.slice(0, 2)}
+                    </Text>
+                  </View>
+                )}
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : (
+          <Text variant="caption" color="muted">
+            Not streaming in {regionName(region)} — try another region.
+          </Text>
+        )}
+        {regionModal}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -140,31 +255,7 @@ export function WhereToWatch({ availability }: { availability?: WatchAvailabilit
         Streaming availability powered by JustWatch.
       </Text>
 
-      <Modal visible={pickerOpen} onClose={() => setPickerOpen(false)} title="Choose region">
-        {regionCodes.map((code) => {
-          const selected = code === region;
-          return (
-            <Pressable
-              key={code}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => {
-                setRegion(code);
-                setPickerOpen(false);
-              }}
-              style={({ pressed }) => [
-                styles.regionRow,
-                { borderBottomColor: colors.border, backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
-              ]}
-            >
-              <Text variant="body" color={selected ? 'accent' : 'primary'}>
-                {regionName(code)}
-              </Text>
-              {selected ? <Ionicons name="checkmark" size={18} color={colors.accent} /> : null}
-            </Pressable>
-          );
-        })}
-      </Modal>
+      {regionModal}
     </View>
   );
 }
@@ -231,5 +322,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  compactWrap: {
+    gap: spacing.sm,
+  },
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  compactLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  compactRegion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 2,
+    paddingHorizontal: spacing.xs,
+  },
+  compactRow: {
+    gap: spacing.sm,
+  },
+  compactLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
   },
 });

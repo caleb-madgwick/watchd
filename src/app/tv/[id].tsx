@@ -1,24 +1,23 @@
 import { Image } from 'expo-image';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { CastRow } from '@/components/media/CastRow';
+import { MediaRow } from '@/components/media/MediaRow';
+import { WhereToWatch } from '@/components/media/WhereToWatch';
+import { ErrorState } from '@/components/primitives/ErrorState';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { ReelScroller } from '@/components/primitives/ReelScroller';
-import { MediaRow } from '@/components/media/MediaRow';
-import { RatingSummary } from '@/components/media/RatingSummary';
-import { WhereToWatch } from '@/components/media/WhereToWatch';
-import { Button } from '@/components/primitives/Button';
-import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
+import { SegmentedControl } from '@/components/primitives/SegmentedControl';
 import { Skeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
 import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { useCommunitySummary } from '@/features/tracking/queries';
 import { TitleActionBar } from '@/features/tracking/TitleActionBar';
 import { TvProgressPanel } from '@/features/tracking/TvProgressPanel';
+import { TitleTags } from '@/features/tags/TitleTags';
 import { useTitleEnrichment } from '@/features/titles/enrich';
 import { useTvDetails } from '@/features/titles/hooks';
 import { TitleHero } from '@/features/titles/TitleHero';
@@ -28,12 +27,15 @@ import { track } from '@/lib/analytics';
 import { useTheme } from '@/theme/ThemeContext';
 import { aspect, contentWidth, radius, spacing } from '@/theme/tokens';
 
+type TvTab = 'overview' | 'seasons' | 'cast' | 'reviews' | 'more';
+
 export default function TvDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const tmdbId = Number.parseInt(params.id ?? '', 10);
   const validId = Number.isFinite(tmdbId) && tmdbId > 0;
   const { isDesktop } = useBreakpoint();
   const { colors } = useTheme();
+  const [tab, setTab] = useState<TvTab>('overview');
 
   const details = useTvDetails(validId ? tmdbId : undefined);
   const community = useCommunitySummary(validId ? { tmdbId, mediaType: 'tv' } : undefined);
@@ -52,6 +54,16 @@ export default function TvDetailScreen() {
   }
 
   const tv = details.data;
+
+  const tabs: { value: TvTab; label: string }[] = tv
+    ? [
+        { value: 'overview' as const, label: 'Overview' },
+        ...(tv.seasons.length > 0 ? [{ value: 'seasons' as const, label: 'Seasons' }] : []),
+        ...(tv.cast.length > 0 ? [{ value: 'cast' as const, label: 'Cast' }] : []),
+        { value: 'reviews' as const, label: 'Reviews' },
+        ...(tv.related.length > 0 ? [{ value: 'more' as const, label: 'More' }] : []),
+      ]
+    : [];
 
   return (
     <Screen>
@@ -78,46 +90,39 @@ export default function TvDetailScreen() {
             tagline={tv.tagline}
             backdropUrl={tv.backdropUrl}
             posterUrl={tv.posterUrl}
+            trailerUrl={tv.trailerUrl}
             metaParts={[
               tv.releaseYear?.toString(),
-              tv.status,
               tv.numberOfSeasons
                 ? `${tv.numberOfSeasons} season${tv.numberOfSeasons === 1 ? '' : 's'}`
                 : undefined,
               tv.numberOfEpisodes ? `${tv.numberOfEpisodes} episodes` : undefined,
+              tv.status,
             ]}
+            ratings={{
+              tmdbRating: tv.tmdbRating,
+              communityRating: community.data?.avg_rating ?? null,
+              communityCount: community.data?.rating_count ?? 0,
+              watchedCount: community.data?.watched_count ?? 0,
+            }}
           />
 
-          <View style={[styles.columns, isDesktop && styles.columnsWide]}>
-            <View style={[styles.actionsColumn, isDesktop && styles.actionsColumnWide]}>
-              <TitleActionBar title={tv} />
-              <TvProgressPanel tv={tv} />
-              <RatingSummary
-                tmdbRating={tv.tmdbRating}
-                tmdbVoteCount={tv.tmdbVoteCount}
-                communityRating={community.data?.avg_rating ?? null}
-                communityCount={community.data?.rating_count ?? 0}
-                watchedCount={community.data?.watched_count ?? 0}
-              />
-              {tv.trailerUrl ? (
-                <Button
-                  title="Watch trailer"
-                  variant="outline"
-                  icon="play-outline"
-                  fullWidth
-                  onPress={() => WebBrowser.openBrowserAsync(tv.trailerUrl!)}
-                />
-              ) : null}
-            </View>
+          <View style={styles.body}>
+            <TitleActionBar title={tv} />
+            <SegmentedControl
+              options={tabs}
+              value={tab}
+              onChange={setTab}
+              scrollable={!isDesktop}
+            />
+          </View>
 
-            <View style={styles.mainColumn}>
+          {tab === 'overview' ? (
+            <View style={[styles.body, styles.pane]}>
               {tv.overview ? (
-                <View style={styles.block}>
-                  <Text variant="title3">Overview</Text>
-                  <Text variant="body" color="secondary">
-                    {tv.overview}
-                  </Text>
-                </View>
+                <Text variant="body" color="secondary" style={styles.prose}>
+                  {tv.overview}
+                </Text>
               ) : null}
               {tv.creators.length > 0 ? (
                 <Text variant="callout" color="secondary">
@@ -130,20 +135,16 @@ export default function TvDetailScreen() {
                   {tv.genres.map((g) => g.name).join(' · ')}
                 </Text>
               ) : null}
-            </View>
-          </View>
-
-          {tv.watch ? (
-            <View style={styles.fullSection}>
-              <WhereToWatch availability={tv.watch} />
+              {tv.watch ? <WhereToWatch availability={tv.watch} compact /> : null}
+              <TitleTags title={tv} />
             </View>
           ) : null}
 
-          {tv.seasons.length > 0 ? (
-            <View style={styles.fullSection}>
-              <Text variant="title3" style={styles.sectionHeading}>
-                Seasons
-              </Text>
+          {tab === 'seasons' ? (
+            <View style={styles.paneFull}>
+              <View style={styles.progressWrap}>
+                <TvProgressPanel tv={tv} />
+              </View>
               <ReelScroller
                 contentContainerStyle={styles.seasonsRow}
                 paddleCenter={132 / aspect.poster / 2}
@@ -161,45 +162,44 @@ export default function TvDetailScreen() {
                       },
                     ]}
                   >
-                      {season.posterUrl ? (
-                        <Image
-                          source={{ uri: season.posterUrl }}
-                          style={[styles.seasonPoster, { backgroundColor: colors.surfaceRaised }]}
-                          contentFit="cover"
-                        />
-                      ) : (
-                        <View style={[styles.seasonPoster, { backgroundColor: colors.surfaceRaised }]} />
-                      )}
-                      <View style={styles.seasonMeta}>
-                        <Text variant="subhead" numberOfLines={1}>
-                          {season.name}
-                        </Text>
-                        <Text variant="caption" color="muted">
-                          {season.episodeCount} ep{season.episodeCount === 1 ? '' : 's'}
-                          {season.airYear ? ` · ${season.airYear}` : ''}
-                        </Text>
-                      </View>
+                    {season.posterUrl ? (
+                      <Image
+                        source={{ uri: season.posterUrl }}
+                        style={[styles.seasonPoster, { backgroundColor: colors.surfaceRaised }]}
+                        contentFit="cover"
+                      />
+                    ) : (
+                      <View style={[styles.seasonPoster, { backgroundColor: colors.surfaceRaised }]} />
+                    )}
+                    <View style={styles.seasonMeta}>
+                      <Text variant="subhead" numberOfLines={1}>
+                        {season.name}
+                      </Text>
+                      <Text variant="caption" color="muted">
+                        {season.episodeCount} ep{season.episodeCount === 1 ? '' : 's'}
+                        {season.airYear ? ` · ${season.airYear}` : ''}
+                      </Text>
+                    </View>
                   </LinkPressable>
                 ))}
               </ReelScroller>
             </View>
           ) : null}
 
-          {tv.cast.length > 0 ? (
-            <View style={styles.fullSection}>
-              <Text variant="title3" style={styles.sectionHeading}>
-                Cast
-              </Text>
+          {tab === 'cast' ? (
+            <View style={styles.paneFull}>
               <CastRow cast={tv.cast} />
             </View>
           ) : null}
 
-          <View style={styles.fullSection}>
-            <TitleReviewsSection title={tv} />
-          </View>
+          {tab === 'reviews' ? (
+            <View style={styles.paneFull}>
+              <TitleReviewsSection title={tv} />
+            </View>
+          ) : null}
 
-          {tv.related.length > 0 ? (
-            <View style={styles.fullSection}>
+          {tab === 'more' ? (
+            <View style={styles.paneFull}>
               <MediaRow heading="More like this" titles={tv.related} />
             </View>
           ) : null}
@@ -222,42 +222,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
-  columns: {
+  body: {
     width: '100%',
     maxWidth: contentWidth.page,
     alignSelf: 'center',
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    gap: spacing.lg,
+  },
+  pane: {
     paddingTop: spacing.xl,
     gap: spacing.xl,
   },
-  columnsWide: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing['3xl'],
-  },
-  actionsColumn: {
-    gap: spacing.md,
-  },
-  actionsColumnWide: {
-    width: 320,
-  },
-  mainColumn: {
-    flex: 1,
-    gap: spacing.lg,
-    maxWidth: contentWidth.prose,
-  },
-  block: {
-    gap: spacing.sm,
-  },
-  fullSection: {
+  paneFull: {
     width: '100%',
     maxWidth: contentWidth.page,
     alignSelf: 'center',
-    marginTop: spacing['2xl'],
+    paddingTop: spacing.xl,
   },
-  sectionHeading: {
+  prose: {
+    maxWidth: contentWidth.prose,
+  },
+  progressWrap: {
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   seasonsRow: {
     paddingHorizontal: spacing.lg,

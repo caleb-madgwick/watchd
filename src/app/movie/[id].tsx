@@ -1,20 +1,19 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { CastRow } from '@/components/media/CastRow';
 import { MediaRow } from '@/components/media/MediaRow';
-import { RatingSummary } from '@/components/media/RatingSummary';
 import { WhereToWatch } from '@/components/media/WhereToWatch';
-import { Button } from '@/components/primitives/Button';
 import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
+import { SegmentedControl } from '@/components/primitives/SegmentedControl';
 import { Skeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
-import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { useCommunitySummary } from '@/features/tracking/queries';
 import { TitleActionBar } from '@/features/tracking/TitleActionBar';
+import { TitleTags } from '@/features/tags/TitleTags';
+import { useTitleEnrichment } from '@/features/titles/enrich';
 import { useMovieDetails } from '@/features/titles/hooks';
 import { TitleHero } from '@/features/titles/TitleHero';
 import { TitleReviewsSection } from '@/features/titles/TitleReviewsSection';
@@ -23,14 +22,18 @@ import { track } from '@/lib/analytics';
 import { contentWidth, spacing } from '@/theme/tokens';
 import { formatRuntime } from '@/utils/titles';
 
+type MovieTab = 'overview' | 'cast' | 'reviews' | 'more';
+
 export default function MovieDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const tmdbId = Number.parseInt(params.id ?? '', 10);
   const validId = Number.isFinite(tmdbId) && tmdbId > 0;
   const { isDesktop } = useBreakpoint();
+  const [tab, setTab] = useState<MovieTab>('overview');
 
   const details = useMovieDetails(validId ? tmdbId : undefined);
   const community = useCommunitySummary(validId ? { tmdbId, mediaType: 'movie' } : undefined);
+  useTitleEnrichment(details.data);
 
   useEffect(() => {
     if (validId) track('title_opened', { mediaType: 'movie', tmdbId });
@@ -45,6 +48,15 @@ export default function MovieDetailScreen() {
   }
 
   const movie = details.data;
+
+  const tabs: { value: MovieTab; label: string }[] = movie
+    ? [
+        { value: 'overview' as const, label: 'Overview' },
+        ...(movie.cast.length > 0 ? [{ value: 'cast' as const, label: 'Cast' }] : []),
+        { value: 'reviews' as const, label: 'Reviews' },
+        ...(movie.related.length > 0 ? [{ value: 'more' as const, label: 'More' }] : []),
+      ]
+    : [];
 
   return (
     <Screen>
@@ -71,6 +83,7 @@ export default function MovieDetailScreen() {
             tagline={movie.tagline}
             backdropUrl={movie.backdropUrl}
             posterUrl={movie.posterUrl}
+            trailerUrl={movie.trailerUrl}
             metaParts={[
               movie.releaseYear?.toString(),
               formatRuntime(movie.runtimeMinutes),
@@ -79,41 +92,33 @@ export default function MovieDetailScreen() {
                 .map((g) => g.name)
                 .join(', ') || undefined,
             ]}
+            ratings={{
+              tmdbRating: movie.tmdbRating,
+              communityRating: community.data?.avg_rating ?? null,
+              communityCount: community.data?.rating_count ?? 0,
+              watchedCount: community.data?.watched_count ?? 0,
+            }}
           />
 
-          <View style={[styles.columns, isDesktop && styles.columnsWide]}>
-            <View style={[styles.actionsColumn, isDesktop && styles.actionsColumnWide]}>
-              <TitleActionBar title={movie} />
-              <RatingSummary
-                tmdbRating={movie.tmdbRating}
-                tmdbVoteCount={movie.tmdbVoteCount}
-                communityRating={community.data?.avg_rating ?? null}
-                communityCount={community.data?.rating_count ?? 0}
-                watchedCount={community.data?.watched_count ?? 0}
-              />
-              {movie.trailerUrl ? (
-                <Button
-                  title="Watch trailer"
-                  variant="outline"
-                  icon="play-outline"
-                  fullWidth
-                  onPress={() => WebBrowser.openBrowserAsync(movie.trailerUrl!)}
-                />
-              ) : null}
-            </View>
+          <View style={styles.body}>
+            <TitleActionBar title={movie} />
+            <SegmentedControl
+              options={tabs}
+              value={tab}
+              onChange={setTab}
+              scrollable={!isDesktop}
+            />
+          </View>
 
-            <View style={styles.mainColumn}>
+          {tab === 'overview' ? (
+            <View style={[styles.body, styles.pane]}>
               {movie.overview ? (
-                <View style={styles.block}>
-                  <Text variant="title3">Overview</Text>
-                  <Text variant="body" color="secondary">
-                    {movie.overview}
-                  </Text>
-                </View>
+                <Text variant="body" color="secondary" style={styles.prose}>
+                  {movie.overview}
+                </Text>
               ) : null}
-
               {movie.directors.length > 0 || movie.keyCrew.length > 0 ? (
-                <View style={styles.block}>
+                <View style={styles.crewBlock}>
                   {movie.directors.length > 0 ? (
                     <Text variant="callout" color="secondary">
                       <Text variant="headline">Directed by </Text>
@@ -130,35 +135,28 @@ export default function MovieDetailScreen() {
                     ))}
                 </View>
               ) : null}
-            </View>
-          </View>
-
-          {movie.watch ? (
-            <View style={styles.fullSection}>
-              <WhereToWatch availability={movie.watch} />
+              {movie.watch ? <WhereToWatch availability={movie.watch} compact /> : null}
+              <TitleTags title={movie} />
             </View>
           ) : null}
 
-          {movie.cast.length > 0 ? (
-            <View style={styles.fullSection}>
-              <Text variant="title3" style={styles.sectionHeading}>
-                Cast
-              </Text>
+          {tab === 'cast' ? (
+            <View style={styles.paneFull}>
               <CastRow cast={movie.cast} />
             </View>
           ) : null}
 
-          <View style={styles.fullSection}>
-            <TitleReviewsSection title={movie} />
-          </View>
-
-          {movie.related.length > 0 ? (
-            <View style={styles.fullSection}>
-              <MediaRow heading="More like this" titles={movie.related} />
+          {tab === 'reviews' ? (
+            <View style={styles.paneFull}>
+              <TitleReviewsSection title={movie} />
             </View>
           ) : null}
 
-          <TmdbAttribution compact />
+          {tab === 'more' ? (
+            <View style={styles.paneFull}>
+              <MediaRow heading="More like this" titles={movie.related} />
+            </View>
+          ) : null}
         </ScrollView>
       )}
     </Screen>
@@ -176,41 +174,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
-  columns: {
+  body: {
     width: '100%',
     maxWidth: contentWidth.page,
     alignSelf: 'center',
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    gap: spacing.lg,
+  },
+  pane: {
     paddingTop: spacing.xl,
     gap: spacing.xl,
   },
-  columnsWide: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing['3xl'],
-  },
-  actionsColumn: {
-    gap: spacing.md,
-  },
-  actionsColumnWide: {
-    width: 320,
-  },
-  mainColumn: {
-    flex: 1,
-    gap: spacing.xl,
-    maxWidth: contentWidth.prose,
-  },
-  block: {
-    gap: spacing.sm,
-  },
-  fullSection: {
+  paneFull: {
     width: '100%',
     maxWidth: contentWidth.page,
     alignSelf: 'center',
-    marginTop: spacing['2xl'],
+    paddingTop: spacing.xl,
   },
-  sectionHeading: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+  prose: {
+    maxWidth: contentWidth.prose,
+  },
+  crewBlock: {
+    gap: spacing.xs,
   },
 });

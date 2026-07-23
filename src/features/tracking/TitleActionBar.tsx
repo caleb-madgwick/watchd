@@ -48,7 +48,11 @@ function ActionButton({
       style={({ pressed }) => [
         styles.actionButton,
         {
-          backgroundColor: pressed ? colors.surfaceHigh : colors.surface,
+          backgroundColor: active
+            ? colors.accentSoft
+            : pressed
+              ? colors.surfaceHigh
+              : 'transparent',
           borderColor: active ? colors.accent : colors.border,
           opacity: disabled ? 0.5 : 1,
         },
@@ -56,10 +60,14 @@ function ActionButton({
     >
       <Ionicons
         name={active ? activeIcon : icon}
-        size={20}
+        size={17}
         color={active ? colors.accent : colors.textSecondary}
       />
-      <Text variant="caption" style={{ color: active ? colors.accent : colors.textSecondary }}>
+      <Text
+        variant="caption"
+        numberOfLines={1}
+        style={{ color: active ? colors.accent : colors.textSecondary }}
+      >
         {label}
       </Text>
     </Pressable>
@@ -110,7 +118,7 @@ export function TitleActionBar({ title }: { title: TitleSummary }) {
   const otherStatus = MORE_STATUSES.find((s) => s.status === current?.status);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.actionsRow}>
         <ActionButton
           icon="eye-outline"
@@ -146,33 +154,35 @@ export function TitleActionBar({ title }: { title: TitleSummary }) {
         />
       </View>
 
-      <View style={[styles.ratingRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <Text variant="subhead" color="secondary">
-          Your rating
-        </Text>
-        <RatingInput
-          value={current?.rating ?? 0}
-          onChange={(value) => setRating.mutate(value > 0 ? value : null)}
-          size={30}
-          disabled={status.isLoading}
-        />
-      </View>
+      <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
-      <View style={styles.primaryButtons}>
-        <Button
-          title="Log or review"
-          icon="create-outline"
-          size="lg"
-          onPress={() => setLogOpen(true)}
-          style={styles.logButton}
-        />
-        <Button
-          title="Add to list"
-          icon="albums-outline"
-          variant="secondary"
-          size="lg"
-          onPress={() => setListSheetOpen(true)}
-        />
+      <View style={styles.bottomRow}>
+        <View style={styles.ratingCluster}>
+          <Text variant="caption" color="muted" style={styles.ratingLabel}>
+            Your rating
+          </Text>
+          <RatingInput
+            value={current?.rating ?? 0}
+            onChange={(value) => setRating.mutate(value > 0 ? value : null)}
+            size={26}
+            disabled={status.isLoading}
+          />
+        </View>
+        <View style={styles.primaryButtons}>
+          <Button
+            title="Log or review"
+            icon="create-outline"
+            size="sm"
+            onPress={() => setLogOpen(true)}
+          />
+          <Button
+            title="Add to list"
+            icon="albums-outline"
+            variant="secondary"
+            size="sm"
+            onPress={() => setListSheetOpen(true)}
+          />
+        </View>
       </View>
 
       {listSheetOpen ? (
@@ -248,36 +258,51 @@ export function TitleActionBar({ title }: { title: TitleSummary }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
     gap: spacing.md,
   },
   actionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   actionButton: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: 130,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    minHeight: 62,
     justifyContent: 'center',
-  },
-  ratingRow: {
+    gap: spacing.xs,
+    height: 38,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
-    padding: spacing.md,
+  },
+  cardDivider: {
+    height: StyleSheet.hairlineWidth,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  ratingCluster: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  ratingLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   primaryButtons: {
     flexDirection: 'row',
     gap: spacing.sm,
-  },
-  logButton: {
-    flex: 1,
   },
   signedOut: {
     borderRadius: radius.md,
