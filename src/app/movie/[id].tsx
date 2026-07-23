@@ -12,9 +12,14 @@ import { Skeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
 import { useCommunitySummary } from '@/features/tracking/queries';
 import { TitleActionBar } from '@/features/tracking/TitleActionBar';
-import { TitleTags } from '@/features/tags/TitleTags';
 import { useTitleEnrichment } from '@/features/titles/enrich';
 import { useMovieDetails } from '@/features/titles/hooks';
+import {
+  formatFullDate,
+  formatMoney,
+  languageName,
+  TitleFacts,
+} from '@/features/titles/TitleFacts';
 import { TitleHero } from '@/features/titles/TitleHero';
 import { TitleReviewsSection } from '@/features/titles/TitleReviewsSection';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -111,33 +116,49 @@ export default function MovieDetailScreen() {
           </View>
 
           {tab === 'overview' ? (
-            <View style={[styles.body, styles.pane]}>
-              {movie.overview ? (
-                <Text variant="body" color="secondary" style={styles.prose}>
-                  {movie.overview}
-                </Text>
-              ) : null}
-              {movie.directors.length > 0 || movie.keyCrew.length > 0 ? (
-                <View style={styles.crewBlock}>
-                  {movie.directors.length > 0 ? (
-                    <Text variant="callout" color="secondary">
-                      <Text variant="headline">Directed by </Text>
-                      {movie.directors.map((d) => d.name).join(', ')}
-                    </Text>
-                  ) : null}
-                  {movie.keyCrew
-                    .filter((crew) => crew.job !== 'Director')
-                    .slice(0, 3)
-                    .map((crew) => (
-                      <Text key={`${crew.id}-${crew.job}`} variant="footnote" color="muted">
-                        {crew.job}: {crew.name}
+            <>
+              <View style={[styles.body, styles.pane]}>
+                {movie.overview ? (
+                  <Text variant="body" color="secondary" style={styles.prose}>
+                    {movie.overview}
+                  </Text>
+                ) : null}
+                {movie.directors.length > 0 || movie.keyCrew.length > 0 ? (
+                  <View style={styles.crewBlock}>
+                    {movie.directors.length > 0 ? (
+                      <Text variant="callout" color="secondary">
+                        <Text variant="headline">Directed by </Text>
+                        {movie.directors.map((d) => d.name).join(', ')}
                       </Text>
-                    ))}
+                    ) : null}
+                    {movie.keyCrew
+                      .filter((crew) => crew.job !== 'Director')
+                      .slice(0, 3)
+                      .map((crew) => (
+                        <Text key={`${crew.id}-${crew.job}`} variant="footnote" color="muted">
+                          {crew.job}: {crew.name}
+                        </Text>
+                      ))}
+                  </View>
+                ) : null}
+                <TitleFacts
+                  facts={[
+                    { label: 'Released', value: formatFullDate(movie.releaseDate) },
+                    { label: 'Status', value: movie.status },
+                    { label: 'Language', value: languageName(movie.originalLanguage) },
+                    { label: 'Budget', value: formatMoney(movie.budget) },
+                    { label: 'Box office', value: formatMoney(movie.revenue) },
+                    { label: 'Studio', value: movie.studios?.join(', ') || undefined },
+                    { label: 'Country', value: movie.countries?.join(', ') || undefined },
+                  ]}
+                />
+              </View>
+              {movie.watch ? (
+                <View style={styles.paneFull}>
+                  <WhereToWatch availability={movie.watch} />
                 </View>
               ) : null}
-              {movie.watch ? <WhereToWatch availability={movie.watch} compact /> : null}
-              <TitleTags title={movie} />
-            </View>
+            </>
           ) : null}
 
           {tab === 'cast' ? (

@@ -13,13 +13,12 @@ import { Screen } from '@/components/primitives/Screen';
 import { SegmentedControl } from '@/components/primitives/SegmentedControl';
 import { Skeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
-import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { useCommunitySummary } from '@/features/tracking/queries';
 import { TitleActionBar } from '@/features/tracking/TitleActionBar';
 import { TvProgressPanel } from '@/features/tracking/TvProgressPanel';
-import { TitleTags } from '@/features/tags/TitleTags';
 import { useTitleEnrichment } from '@/features/titles/enrich';
 import { useTvDetails } from '@/features/titles/hooks';
+import { formatFullDate, languageName, TitleFacts } from '@/features/titles/TitleFacts';
 import { TitleHero } from '@/features/titles/TitleHero';
 import { TitleReviewsSection } from '@/features/titles/TitleReviewsSection';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
@@ -118,26 +117,43 @@ export default function TvDetailScreen() {
           </View>
 
           {tab === 'overview' ? (
-            <View style={[styles.body, styles.pane]}>
-              {tv.overview ? (
-                <Text variant="body" color="secondary" style={styles.prose}>
-                  {tv.overview}
-                </Text>
+            <>
+              <View style={[styles.body, styles.pane]}>
+                {tv.overview ? (
+                  <Text variant="body" color="secondary" style={styles.prose}>
+                    {tv.overview}
+                  </Text>
+                ) : null}
+                {tv.creators.length > 0 ? (
+                  <Text variant="callout" color="secondary">
+                    <Text variant="headline">Created by </Text>
+                    {tv.creators.map((c) => c.name).join(', ')}
+                  </Text>
+                ) : null}
+                {tv.genres.length > 0 ? (
+                  <Text variant="footnote" color="muted">
+                    {tv.genres.map((g) => g.name).join(' · ')}
+                  </Text>
+                ) : null}
+                <TitleFacts
+                  facts={[
+                    { label: 'First aired', value: formatFullDate(tv.releaseDate) },
+                    { label: 'Last aired', value: formatFullDate(tv.lastAirDate) },
+                    { label: 'Network', value: tv.networks?.join(', ') || undefined },
+                    {
+                      label: 'Episode length',
+                      value: tv.episodeRunTimeMinutes ? `${tv.episodeRunTimeMinutes} min` : undefined,
+                    },
+                    { label: 'Language', value: languageName(tv.originalLanguage) },
+                  ]}
+                />
+              </View>
+              {tv.watch ? (
+                <View style={styles.paneFull}>
+                  <WhereToWatch availability={tv.watch} />
+                </View>
               ) : null}
-              {tv.creators.length > 0 ? (
-                <Text variant="callout" color="secondary">
-                  <Text variant="headline">Created by </Text>
-                  {tv.creators.map((c) => c.name).join(', ')}
-                </Text>
-              ) : null}
-              {tv.genres.length > 0 ? (
-                <Text variant="footnote" color="muted">
-                  {tv.genres.map((g) => g.name).join(' · ')}
-                </Text>
-              ) : null}
-              {tv.watch ? <WhereToWatch availability={tv.watch} compact /> : null}
-              <TitleTags title={tv} />
-            </View>
+            </>
           ) : null}
 
           {tab === 'seasons' ? (
@@ -203,8 +219,6 @@ export default function TvDetailScreen() {
               <MediaRow heading="More like this" titles={tv.related} />
             </View>
           ) : null}
-
-          <TmdbAttribution compact />
         </ScrollView>
       )}
     </Screen>

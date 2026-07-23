@@ -102,6 +102,11 @@ export interface TmdbMovieDetails extends TmdbMovieSummary {
   runtime?: number | null;
   tagline?: string | null;
   status?: string | null;
+  original_language?: string | null;
+  budget?: number | null;
+  revenue?: number | null;
+  production_companies?: { id: number; name?: string | null }[];
+  production_countries?: { iso_3166_1?: string; name?: string | null }[];
   genres?: TmdbGenre[];
   credits?: TmdbCredits;
   videos?: { results?: TmdbVideo[] };
@@ -122,6 +127,9 @@ export interface TmdbSeasonSummary {
 export interface TmdbTvDetails extends TmdbTvSummary {
   tagline?: string | null;
   status?: string | null;
+  original_language?: string | null;
+  last_air_date?: string | null;
+  networks?: { id: number; name?: string | null }[];
   number_of_seasons?: number;
   number_of_episodes?: number;
   episode_run_time?: number[];

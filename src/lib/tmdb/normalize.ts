@@ -205,6 +205,18 @@ export function normalizeMovieDetails(raw: TmdbMovieDetails): MovieDetails {
     mediaType: 'movie',
     tagline: raw.tagline?.trim() || undefined,
     runtimeMinutes: raw.runtime && raw.runtime > 0 ? raw.runtime : undefined,
+    status: raw.status?.trim() || undefined,
+    originalLanguage: raw.original_language?.trim() || undefined,
+    budget: raw.budget && raw.budget > 0 ? raw.budget : undefined,
+    revenue: raw.revenue && raw.revenue > 0 ? raw.revenue : undefined,
+    studios: (raw.production_companies ?? [])
+      .map((c) => c.name?.trim())
+      .filter((name): name is string => !!name)
+      .slice(0, 3),
+    countries: (raw.production_countries ?? [])
+      .map((c) => c.name?.trim())
+      .filter((name): name is string => !!name)
+      .slice(0, 3),
     genres: (raw.genres ?? []).filter((g) => g.name),
     tmdbVoteCount: raw.vote_count ?? undefined,
     directors: crewByJobs(raw.credits, ['Director']),
@@ -239,6 +251,12 @@ export function normalizeTvDetails(raw: TmdbTvDetails): TvDetails {
     mediaType: 'tv',
     tagline: raw.tagline?.trim() || undefined,
     status: raw.status?.trim() || undefined,
+    originalLanguage: raw.original_language?.trim() || undefined,
+    lastAirDate: raw.last_air_date?.trim() || undefined,
+    networks: (raw.networks ?? [])
+      .map((n) => n.name?.trim())
+      .filter((name): name is string => !!name)
+      .slice(0, 3),
     genres: (raw.genres ?? []).filter((g) => g.name),
     tmdbVoteCount: raw.vote_count ?? undefined,
     creators: (raw.created_by ?? [])

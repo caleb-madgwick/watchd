@@ -67,6 +67,14 @@ export interface MovieDetails extends TitleSummary {
   mediaType: 'movie';
   tagline?: string;
   runtimeMinutes?: number;
+  status?: string;
+  /** ISO 639-1 language code, e.g. "en". */
+  originalLanguage?: string;
+  /** USD, only when TMDB reports a non-zero figure. */
+  budget?: number;
+  revenue?: number;
+  studios?: string[];
+  countries?: string[];
   genres: Genre[];
   tmdbVoteCount?: number;
   directors: CrewMember[];
@@ -91,6 +99,11 @@ export interface TvDetails extends TitleSummary {
   mediaType: 'tv';
   tagline?: string;
   status?: string;
+  /** ISO 639-1 language code, e.g. "en". */
+  originalLanguage?: string;
+  /** "2013-09-29" — the most recent episode TMDB knows about. */
+  lastAirDate?: string;
+  networks?: string[];
   genres: Genre[];
   tmdbVoteCount?: number;
   creators: CrewMember[];
