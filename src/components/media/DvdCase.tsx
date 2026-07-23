@@ -127,21 +127,7 @@ export function DvdCase({
 
   return (
     <View style={{ width, height, overflow: 'visible' }}>
-      {/* Contact shadow on the shelf */}
-      <Animated.View
-        style={[
-          styles.contactShadow,
-          {
-            width: width * 0.86,
-            left: width * 0.07,
-            opacity: open.interpolate({ inputRange: [0, 1], outputRange: [0.45, 0.28] }),
-            transform: [{ scaleX: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) }],
-          },
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* The case, standing in 3/4 perspective; straightens slightly as it opens */}
+      {/* The case; turns slightly as the cover opens */}
       <Animated.View
         style={[
           styles.caseGroup,
@@ -256,13 +242,13 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     overflow: 'visible',
-  },
-  contactShadow: {
-    position: 'absolute',
-    bottom: -5,
-    height: 10,
-    borderRadius: 999,
-    backgroundColor: '#000000',
+    // Natural drop shadow that follows the case (and its tilt) instead of a
+    // painted ellipse on the shelf.
+    shadowColor: '#000000',
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
   tray: {
     position: 'absolute',

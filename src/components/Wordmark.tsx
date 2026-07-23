@@ -2,87 +2,83 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { RetroStripes } from '@/components/RetroStripes';
 import { useTheme } from '@/theme/ThemeContext';
-import { fontFamily, radius, spacing } from '@/theme/tokens';
+import { fontFamily, palette, spacing } from '@/theme/tokens';
 
 export interface WordmarkProps {
   size?: number;
   /**
    * inline — nav rails and headers.
-   * sign   — the shop-sign badge for auth/onboarding: boxed, glowing, striped.
+   * sign   — bigger shop-sign lockup with awning stripes (auth/onboarding).
    */
   variant?: 'inline' | 'sign';
 }
 
-/** The Video Club wordmark: neon-glow display type, "Club" in the accent. */
-export function Wordmark({ size = 34, variant = 'inline' }: WordmarkProps) {
-  const { colors } = useTheme();
+/**
+ * The Video Club mark: an original badge in the 90s rental-chain idiom —
+ * ultra-bold condensed caps on a tilted colour block with a hard offset
+ * shadow. (Deliberately our own lockup, not any real chain's logo.)
+ */
+export function Wordmark({ size = 24, variant = 'inline' }: WordmarkProps) {
+  const { colors, scheme } = useTheme();
 
-  const text = (
-    <Text
+  const badge = (
+    <View
       accessibilityRole="header"
       accessibilityLabel="Video Club"
-      style={{
-        fontFamily: fontFamily.display,
-        fontSize: size,
-        lineHeight: size * 1.25,
-        color: colors.text,
-        letterSpacing: 0.3,
-      }}
+      style={[
+        styles.badge,
+        {
+          backgroundColor: colors.accent,
+          borderColor: scheme === 'dark' ? palette.ink950 : '#083D2E',
+          paddingHorizontal: size * 0.5,
+          paddingVertical: size * 0.18,
+          borderRadius: Math.max(4, size * 0.16),
+          transform: [{ skewX: '-8deg' }],
+          shadowColor: '#000000',
+        },
+      ]}
     >
-      Video{' '}
       <Text
+        numberOfLines={1}
         style={{
           fontFamily: fontFamily.display,
           fontSize: size,
-          lineHeight: size * 1.25,
-          color: colors.accent,
-          letterSpacing: 0.3,
-          textShadowColor: colors.glow,
-          textShadowRadius: size * 0.45,
-          textShadowOffset: { width: 0, height: 0 },
+          lineHeight: size * 1.3,
+          color: palette.cream,
+          letterSpacing: size * 0.06,
+          textShadowColor: 'rgba(0,0,0,0.35)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 0,
         }}
       >
-        Club
+        VIDEO CLUB
       </Text>
-    </Text>
+    </View>
   );
 
   if (variant === 'sign') {
     return (
-      <View
-        style={[
-          styles.sign,
-          {
-            backgroundColor: colors.surface,
-            borderColor: colors.accent,
-            shadowColor: colors.glow,
-          },
-        ]}
-      >
-        {text}
-        <RetroStripes width={size * 2.6} height={Math.max(4, size * 0.14)} />
+      <View style={styles.sign}>
+        {badge}
+        <RetroStripes width={size * 4.4} height={Math.max(4, size * 0.14)} />
       </View>
     );
   }
 
-  return <View style={styles.inline}>{text}</View>;
+  return badge;
 }
 
 const styles = StyleSheet.create({
-  inline: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+  badge: {
+    alignSelf: 'flex-start',
+    borderWidth: 2,
+    shadowOpacity: 0.45,
+    shadowRadius: 0,
+    shadowOffset: { width: 4, height: 4 },
+    elevation: 5,
   },
   sign: {
     alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing['3xl'],
-    borderRadius: radius.lg,
-    borderWidth: 2,
-    shadowOpacity: 1,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 8,
+    gap: spacing.lg,
   },
 });

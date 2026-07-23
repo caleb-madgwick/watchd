@@ -1,6 +1,6 @@
 import '@/global.css';
 
-import { TitanOne_400Regular } from '@expo-google-fonts/titan-one';
+import { Anton_400Regular } from '@expo-google-fonts/anton';
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -89,7 +89,7 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
-    TitanOne_400Regular,
+    Anton_400Regular,
   });
 
   useEffect(() => {

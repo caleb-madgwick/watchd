@@ -78,9 +78,9 @@ export const radius = {
 } as const;
 
 export const fontFamily = {
-  // Titan One ships one weight — chunky, rounded, shop-sign retro.
-  display: 'TitanOne_400Regular',
-  displayMedium: 'TitanOne_400Regular',
+  // Anton: ultra-bold condensed block caps — 90s rental-chain signage energy.
+  display: 'Anton_400Regular',
+  displayMedium: 'Anton_400Regular',
   body: 'PlusJakartaSans_400Regular',
   bodyMedium: 'PlusJakartaSans_500Medium',
   bodySemiBold: 'PlusJakartaSans_600SemiBold',
@@ -95,10 +95,10 @@ export interface TypeStyle {
 }
 
 export const typeScale = {
-  display: { fontSize: 32, lineHeight: 42, fontFamily: fontFamily.display, letterSpacing: 0.2 },
-  title1: { fontSize: 26, lineHeight: 35, fontFamily: fontFamily.display, letterSpacing: 0.2 },
-  title2: { fontSize: 20, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: 0.2 },
-  title3: { fontSize: 16, lineHeight: 23, fontFamily: fontFamily.displayMedium, letterSpacing: 0.3 },
+  display: { fontSize: 36, lineHeight: 44, fontFamily: fontFamily.display, letterSpacing: 0.6 },
+  title1: { fontSize: 30, lineHeight: 38, fontFamily: fontFamily.display, letterSpacing: 0.6 },
+  title2: { fontSize: 23, lineHeight: 30, fontFamily: fontFamily.display, letterSpacing: 0.5 },
+  title3: { fontSize: 18, lineHeight: 25, fontFamily: fontFamily.displayMedium, letterSpacing: 0.5 },
   headline: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.bodySemiBold },
   body: { fontSize: 16, lineHeight: 24, fontFamily: fontFamily.body },
   callout: { fontSize: 15, lineHeight: 21, fontFamily: fontFamily.body },
