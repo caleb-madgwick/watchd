@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { config } from '@/constants/config';
@@ -21,6 +21,9 @@ const TAB_CONFIG: {
   { name: 'profile', title: 'Profile', icon: 'person-circle-outline', iconActive: 'person-circle' },
 ];
 
+/** Hydration flag store: never emits — the server/client snapshots differ once. */
+const subscribeNever = () => () => {};
+
 export default function TabsLayout() {
   const { colors } = useTheme();
   const { session, profile, initializing } = useAuth();
@@ -31,9 +34,12 @@ export default function TabsLayout() {
   // The static export renders at width 0 (tab bar visible), and React never
   // reconciles style attributes during hydration — so a stale visible tab bar
   // would stick on desktop. Render it hidden until after hydration, then let
-  // the post-mount re-render reveal it only on narrow screens.
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  // the post-hydration re-render reveal it only on narrow screens.
+  const hydrated = useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const hideTabBar = isWide || !hydrated;
 
   if (!config.demoMode) {
