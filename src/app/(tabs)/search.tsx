@@ -94,29 +94,31 @@ export default function SearchScreen() {
                 </Pressable>
               </View>
               {recents.searches.map((recent) => (
-                <Pressable
-                  key={recent}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Search for ${recent}`}
-                  onPress={() => setInput(recent)}
-                  style={({ pressed }) => [
-                    styles.recentRow,
-                    { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
-                  ]}
-                >
-                  <Ionicons name="time-outline" size={17} color={colors.textMuted} />
-                  <Text variant="callout" color="secondary" style={styles.recentText} numberOfLines={1}>
-                    {recent}
-                  </Text>
+                <View key={recent} style={styles.recentRow}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Search for ${recent}`}
+                    onPress={() => setInput(recent)}
+                    style={({ pressed }) => [
+                      styles.recentMain,
+                      { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
+                    ]}
+                  >
+                    <Ionicons name="time-outline" size={17} color={colors.textMuted} />
+                    <Text variant="callout" color="secondary" style={styles.recentText} numberOfLines={1}>
+                      {recent}
+                    </Text>
+                  </Pressable>
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel={`Remove ${recent} from recent searches`}
                     onPress={() => recents.remove(recent)}
                     hitSlop={10}
+                    style={styles.recentRemove}
                   >
                     <Ionicons name="close" size={16} color={colors.textMuted} />
                   </Pressable>
-                </Pressable>
+                </View>
               ))}
             </View>
           ) : (
@@ -234,6 +236,11 @@ const styles = StyleSheet.create({
   recentRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  recentMain: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
@@ -241,6 +248,9 @@ const styles = StyleSheet.create({
   },
   recentText: {
     flex: 1,
+  },
+  recentRemove: {
+    padding: spacing.sm,
   },
   skeletons: {
     paddingHorizontal: spacing.lg,

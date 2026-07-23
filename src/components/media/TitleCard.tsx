@@ -34,15 +34,18 @@ export function TitleCard({
   const posterHeight = posterWidth / aspect.poster;
 
   return (
-    <Link href={href} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={`${title}${year ? `, ${year}` : ''}${mediaTypeLabel ? `, ${mediaTypeLabel}` : ''}`}
-        style={({ pressed }) => [
-          styles.row,
-          { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
-        ]}
-      >
+    // Trailing actions are siblings of the link, never children: nested
+    // interactive elements are invalid DOM on web (<a><button/></a>).
+    <View style={styles.wrapper}>
+      <Link href={href} asChild>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`${title}${year ? `, ${year}` : ''}${mediaTypeLabel ? `, ${mediaTypeLabel}` : ''}`}
+          style={({ pressed }) => [
+            styles.row,
+            { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
+          ]}
+        >
         {posterUrl ? (
           <Image
             source={{ uri: posterUrl }}
@@ -84,15 +87,21 @@ export function TitleCard({
               {overview}
             </Text>
           ) : null}
-        </View>
-        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
-      </Pressable>
-    </Link>
+          </View>
+        </Pressable>
+      </Link>
+      {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   row: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
@@ -123,6 +132,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.xs,
   },
   trailing: {
-    marginLeft: spacing.xs,
+    marginRight: spacing.lg,
   },
 });
