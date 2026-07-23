@@ -21,6 +21,13 @@ import { useAuth } from '@/providers/AuthProvider';
 import { toast } from '@/stores/toastStore';
 import { useTheme, useThemePreference, type ThemePreference } from '@/theme/ThemeContext';
 import { radius, spacing, contentWidth } from '@/theme/tokens';
+import type { NotificationPrefs } from '@/types/database';
+
+const NOTIFICATION_OPTIONS: { key: keyof NotificationPrefs; label: string; caption: string }[] = [
+  { key: 'new_followers', label: 'New followers', caption: 'When someone follows you' },
+  { key: 'review_likes', label: 'Review likes', caption: 'When someone likes one of your reviews' },
+  { key: 'friend_activity', label: 'Friend activity', caption: 'Highlights from people you follow' },
+];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const { colors } = useTheme();
@@ -46,6 +53,9 @@ export default function SettingsScreen() {
   );
   const [bio, setBio] = useState(profile?.bio ?? '');
   const [genres, setGenres] = useState<number[]>(profile?.favouriteGenres ?? []);
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(
+    profile?.notificationPrefs ?? {},
+  );
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -120,6 +130,23 @@ export default function SettingsScreen() {
           : [...current, id],
     );
 
+  const toggleNotification = async (key: keyof NotificationPrefs, value: boolean) => {
+    const previous = notificationPrefs;
+    const next: NotificationPrefs = {
+      new_followers: previous.new_followers ?? true,
+      review_likes: previous.review_likes ?? true,
+      friend_activity: previous.friend_activity ?? true,
+      [key]: value,
+    };
+    setNotificationPrefs(next);
+    try {
+      await updateProfile(session.user.id, { notification_prefs: next });
+    } catch (e) {
+      setNotificationPrefs(previous);
+      toast.error(e instanceof Error ? e.message : 'Could not save that preference.');
+    }
+  };
+
   return (
     <ProfileSubpageShell title="Settings" subtitle={`@${profile.username}`}>
       <Stack.Screen options={{ title: 'Settings — Watchd' }} />
@@ -184,17 +211,26 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Notifications">
-          {['New followers', 'Review likes', 'Friend activity'].map((label) => (
-            <View key={label} style={styles.switchRow}>
-              <View>
-                <Text variant="callout">{label}</Text>
+          {NOTIFICATION_OPTIONS.map((option) => (
+            <View key={option.key} style={styles.switchRow}>
+              <View style={styles.switchLabel}>
+                <Text variant="callout">{option.label}</Text>
                 <Text variant="caption" color="muted">
-                  Coming soon
+                  {option.caption}
                 </Text>
               </View>
-              <Switch value={false} disabled trackColor={{ false: colors.surfaceHigh, true: colors.accent }} />
+              <Switch
+                value={notificationPrefs[option.key] ?? true}
+                onValueChange={(value) => toggleNotification(option.key, value)}
+                trackColor={{ false: colors.surfaceHigh, true: colors.accent }}
+                thumbColor="#FFFFFF"
+                accessibilityLabel={`${option.label} notifications`}
+              />
             </View>
           ))}
+          <Text variant="footnote" color="muted">
+            Your choices are saved now and will apply when notification delivery launches.
+          </Text>
         </Section>
 
         <Section title="Privacy & legal">
@@ -306,6 +342,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  switchLabel: {
+    flex: 1,
+    gap: 1,
   },
   linkRow: {
     paddingVertical: spacing.xs,

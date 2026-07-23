@@ -21,6 +21,13 @@ body {
   border-radius: 4px;
 }
 
+/* Text fields draw their own focused border via the TextInput component —
+   suppress the global ring so inputs don't show a double outline. */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

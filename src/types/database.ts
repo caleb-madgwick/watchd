@@ -10,6 +10,12 @@ export type WatchStatusRow = 'watchlist' | 'watching' | 'watched' | 'paused' | '
 export type ListVisibilityRow = 'public' | 'private';
 export type ActivityTypeRow = 'logged' | 'tv_completed' | 'list_created' | 'followed';
 
+export type NotificationPrefs = {
+  new_followers?: boolean;
+  review_likes?: boolean;
+  friend_activity?: boolean;
+};
+
 export type ProfileRow = {
   id: string;
   username: string;
@@ -18,6 +24,7 @@ export type ProfileRow = {
   avatar_path: string | null;
   favourite_genres: number[];
   onboarding_completed: boolean;
+  notification_prefs: NotificationPrefs;
   follower_count: number;
   following_count: number;
   created_at: string;

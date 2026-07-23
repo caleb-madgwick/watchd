@@ -1,5 +1,5 @@
 import { avatarPublicUrl } from '@/lib/supabase/storage';
-import type { ProfileRow } from '@/types/database';
+import type { NotificationPrefs, ProfileRow } from '@/types/database';
 
 export interface Profile {
   id: string;
@@ -10,6 +10,7 @@ export interface Profile {
   avatarUrl?: string;
   favouriteGenres: number[];
   onboardingCompleted: boolean;
+  notificationPrefs: NotificationPrefs;
   followerCount: number;
   followingCount: number;
   createdAt: string;
@@ -25,6 +26,7 @@ export function mapProfileRow(row: ProfileRow): Profile {
     avatarUrl: avatarPublicUrl(row.avatar_path),
     favouriteGenres: row.favourite_genres ?? [],
     onboardingCompleted: row.onboarding_completed,
+    notificationPrefs: row.notification_prefs ?? {},
     followerCount: row.follower_count,
     followingCount: row.following_count,
     createdAt: row.created_at,

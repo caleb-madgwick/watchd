@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 
 import { requireSupabase } from '@/lib/supabase/client';
-import type { ProfileRow } from '@/types/database';
+import type { NotificationPrefs, ProfileRow } from '@/types/database';
 
 export interface ProfileUpdate {
   username?: string;
@@ -10,6 +10,7 @@ export interface ProfileUpdate {
   avatar_path?: string | null;
   favourite_genres?: number[];
   onboarding_completed?: boolean;
+  notification_prefs?: NotificationPrefs;
 }
 
 export async function updateProfile(userId: string, update: ProfileUpdate): Promise<void> {
