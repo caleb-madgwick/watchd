@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Link, type Href } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type Href } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { aspect, radius, spacing } from '@/theme/tokens';
@@ -25,12 +26,11 @@ export function PosterCard({ title, posterUrl, year, href, width, rating, subtit
   const height = width / aspect.poster;
 
   return (
-    <Link href={href} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={`${title}${year ? `, ${year}` : ''}`}
-        style={({ pressed }) => [{ width, opacity: pressed ? 0.85 : 1 }]}
-      >
+    <LinkPressable
+      href={href}
+      accessibilityLabel={`${title}${year ? `, ${year}` : ''}`}
+      style={({ pressed }) => ({ width, opacity: pressed ? 0.85 : 1 })}
+    >
         {posterUrl ? (
           <Image
             source={{ uri: posterUrl }}
@@ -78,8 +78,7 @@ export function PosterCard({ title, posterUrl, year, href, width, rating, subtit
             ) : null}
           </View>
         </View>
-      </Pressable>
-    </Link>
+    </LinkPressable>
   );
 }
 

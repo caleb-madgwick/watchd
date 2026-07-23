@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/primitives/Avatar';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { RatingStars } from '@/components/primitives/RatingStars';
 import { SpoilerText } from '@/components/primitives/SpoilerText';
 import { Text } from '@/components/primitives/Text';
@@ -51,15 +52,14 @@ export function ActivityCard({ item }: { item: FeedItem }) {
       </View>
 
       {item.title ? (
-        <Link href={titleHref(item.title.media_type, item.title.tmdb_id)} asChild>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={item.title.title}
-            style={({ pressed }) => [
-              styles.titleChip,
-              { backgroundColor: pressed ? colors.surfaceHigh : colors.surfaceRaised },
-            ]}
-          >
+        <LinkPressable
+          href={titleHref(item.title.media_type, item.title.tmdb_id)}
+          accessibilityLabel={item.title.title}
+          style={({ pressed, hovered }) => [
+            styles.titleChip,
+            { backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised },
+          ]}
+        >
             {posterUrl(item.title.poster_path, 'w185') ? (
               <Image
                 source={{ uri: posterUrl(item.title.poster_path, 'w185') }}
@@ -83,8 +83,7 @@ export function ActivityCard({ item }: { item: FeedItem }) {
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={15} color={colors.textMuted} />
-          </Pressable>
-        </Link>
+        </LinkPressable>
       ) : null}
 
       {item.review ? (
@@ -112,23 +111,21 @@ export function ActivityCard({ item }: { item: FeedItem }) {
       ) : null}
 
       {item.list ? (
-        <Link href={`/list/${item.list.id}`} asChild>
-          <Pressable
-            accessibilityRole="link"
-            style={({ pressed }) => [
-              styles.titleChip,
-              { backgroundColor: pressed ? colors.surfaceHigh : colors.surfaceRaised },
-            ]}
-          >
-            <Ionicons name="albums-outline" size={20} color={colors.accent} style={styles.listIcon} />
-            <View style={styles.titleChipText}>
-              <Text variant="headline" numberOfLines={1}>
-                {item.list.name}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={15} color={colors.textMuted} />
-          </Pressable>
-        </Link>
+        <LinkPressable
+          href={`/list/${item.list.id}`}
+          style={({ pressed, hovered }) => [
+            styles.titleChip,
+            { backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised },
+          ]}
+        >
+          <Ionicons name="albums-outline" size={20} color={colors.accent} style={styles.listIcon} />
+          <View style={styles.titleChipText}>
+            <Text variant="headline" numberOfLines={1}>
+              {item.list.name}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={15} color={colors.textMuted} />
+        </LinkPressable>
       ) : null}
     </View>
   );

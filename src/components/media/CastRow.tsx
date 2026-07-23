@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
-import { Link } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
@@ -14,12 +14,12 @@ export function CastRow({ cast }: { cast: CastMember[] }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
       {cast.map((member) => (
-        <Link key={member.id} href={`/person/${member.id}`} asChild>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={`${member.name}${member.character ? ` as ${member.character}` : ''}`}
-            style={({ pressed }) => [styles.card, { opacity: pressed ? 0.8 : 1 }]}
-          >
+        <LinkPressable
+          key={member.id}
+          href={`/person/${member.id}`}
+          accessibilityLabel={`${member.name}${member.character ? ` as ${member.character}` : ''}`}
+          style={({ pressed }) => [styles.card, { opacity: pressed ? 0.8 : 1 }]}
+        >
             {member.profileUrl ? (
               <Image
                 source={{ uri: member.profileUrl }}
@@ -42,8 +42,7 @@ export function CastRow({ cast }: { cast: CastMember[] }) {
                 {member.character}
               </Text>
             ) : null}
-          </Pressable>
-        </Link>
+        </LinkPressable>
       ))}
     </ScrollView>
   );

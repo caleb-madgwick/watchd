@@ -1,7 +1,8 @@
-import { Link, Stack, useLocalSearchParams } from 'expo-router';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 import { EmptyState } from '@/components/primitives/EmptyState';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { RatingStars } from '@/components/primitives/RatingStars';
 import { CardListSkeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
@@ -38,17 +39,16 @@ export default function UserDiaryScreen() {
           contentContainerStyle={styles.list}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           renderItem={({ item: entry }) => (
-            <Link href={titleHref(entry.title.mediaType, entry.title.tmdbId)} asChild>
-              <Pressable
-                accessibilityRole="link"
-                style={({ pressed }) => [
-                  styles.row,
-                  {
-                    backgroundColor: pressed ? colors.surfaceHigh : colors.surface,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
+            <LinkPressable
+              href={titleHref(entry.title.mediaType, entry.title.tmdbId)}
+              style={({ pressed, hovered }) => [
+                styles.row,
+                {
+                  backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
                 <Text variant="caption" color="muted" style={styles.date}>
                   {formatDate(entry.watchedAt)}
                 </Text>
@@ -63,8 +63,7 @@ export default function UserDiaryScreen() {
                   ) : null}
                 </View>
                 {entry.rating ? <RatingStars value={entry.rating} size={12} /> : null}
-              </Pressable>
-            </Link>
+            </LinkPressable>
           )}
           showsVerticalScrollIndicator={false}
         />

@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Link, type Href } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { type Href } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { aspect, radius, spacing } from '@/theme/tokens';
@@ -37,15 +38,14 @@ export function TitleCard({
     // Trailing actions are siblings of the link, never children: nested
     // interactive elements are invalid DOM on web (<a><button/></a>).
     <View style={styles.wrapper}>
-      <Link href={href} asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={`${title}${year ? `, ${year}` : ''}${mediaTypeLabel ? `, ${mediaTypeLabel}` : ''}`}
-          style={({ pressed }) => [
-            styles.row,
-            { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
-          ]}
-        >
+      <LinkPressable
+        href={href}
+        accessibilityLabel={`${title}${year ? `, ${year}` : ''}${mediaTypeLabel ? `, ${mediaTypeLabel}` : ''}`}
+        style={({ pressed, hovered }) => [
+          styles.row,
+          { backgroundColor: pressed || hovered ? colors.surfaceRaised : 'transparent' },
+        ]}
+      >
         {posterUrl ? (
           <Image
             source={{ uri: posterUrl }}
@@ -88,8 +88,7 @@ export function TitleCard({
             </Text>
           ) : null}
           </View>
-        </Pressable>
-      </Link>
+      </LinkPressable>
       {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
     </View>
   );

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/primitives/Avatar';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { Wordmark } from '@/components/Wordmark';
 import { useAuth } from '@/providers/AuthProvider';
@@ -59,27 +60,24 @@ function SectionLabel({ children }: { children: string }) {
 function NavRow({ item, active }: { item: NavItem; active: boolean }) {
   const { colors } = useTheme();
   return (
-    <Link href={item.href} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityState={{ selected: active }}
-        // Layout is inlined (not only StyleSheet-registered) so the row can
-        // never fall back to stacked column layout.
-        style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({
-          flexDirection: 'row',
-          alignItems: 'center',
-          height: 48,
-          borderRadius: radius.sm,
-          paddingHorizontal: spacing.sm,
-          backgroundColor: active
-            ? colors.accentSoft
-            : pressed
-              ? colors.surfaceRaised
-              : hovered
-                ? colors.surface
-                : 'transparent',
-        })}
-      >
+    <LinkPressable
+      href={item.href}
+      accessibilityState={{ selected: active }}
+      style={({ pressed, hovered }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 48,
+        borderRadius: radius.sm,
+        paddingHorizontal: spacing.sm,
+        backgroundColor: active
+          ? colors.accentSoft
+          : pressed
+            ? colors.surfaceRaised
+            : hovered
+              ? colors.surface
+              : 'transparent',
+      })}
+    >
         {active ? <View style={[styles.activeBar, { backgroundColor: colors.accent }]} /> : null}
         <View
           style={{ width: 38, alignItems: 'center', marginRight: spacing.xs, flexShrink: 0 }}
@@ -102,8 +100,7 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
         >
           {item.title}
         </Text>
-      </Pressable>
-    </Link>
+    </LinkPressable>
   );
 }
 
@@ -179,30 +176,27 @@ export function Sidebar() {
         </View>
 
         {profile ? (
-          <Link href="/profile" asChild>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel="Your profile"
-              style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-                styles.user,
-                {
-                  backgroundColor:
-                    pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised,
-                },
-              ]}
-            >
-              <Avatar url={profile.avatarUrl} name={profile.displayName} size={34} />
-              <View style={styles.userText}>
-                <Text variant="subhead" numberOfLines={1}>
-                  {profile.displayName}
-                </Text>
-                <Text variant="caption" color="muted" numberOfLines={1}>
-                  @{profile.username}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-            </Pressable>
-          </Link>
+          <LinkPressable
+            href="/profile"
+            accessibilityLabel="Your profile"
+            style={({ pressed, hovered }) => [
+              styles.user,
+              {
+                backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised,
+              },
+            ]}
+          >
+            <Avatar url={profile.avatarUrl} name={profile.displayName} size={34} />
+            <View style={styles.userText}>
+              <Text variant="subhead" numberOfLines={1}>
+                {profile.displayName}
+              </Text>
+              <Text variant="caption" color="muted" numberOfLines={1}>
+                @{profile.username}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
+          </LinkPressable>
         ) : null}
       </View>
     </View>

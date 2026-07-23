@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import type { ListSummary } from '@/features/lists/hooks';
 import { useTheme } from '@/theme/ThemeContext';
@@ -13,15 +13,17 @@ export function ListCard({ list }: { list: ListSummary }) {
   const { colors } = useTheme();
 
   return (
-    <Link href={`/list/${list.id}`} asChild>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={`${list.name}, ${list.itemCount} titles${list.visibility === 'private' ? ', private' : ''}`}
-        style={({ pressed }) => [
-          styles.card,
-          { backgroundColor: pressed ? colors.surfaceHigh : colors.surface, borderColor: colors.border },
-        ]}
-      >
+    <LinkPressable
+      href={`/list/${list.id}`}
+      accessibilityLabel={`${list.name}, ${list.itemCount} titles${list.visibility === 'private' ? ', private' : ''}`}
+      style={({ pressed, hovered }) => [
+        styles.card,
+        {
+          backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+          borderColor: colors.border,
+        },
+      ]}
+    >
         <View style={styles.fan}>
           {list.previewPosters.length > 0 ? (
             list.previewPosters.map((url, index) => (
@@ -65,8 +67,7 @@ export function ListCard({ list }: { list: ListSummary }) {
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-      </Pressable>
-    </Link>
+    </LinkPressable>
   );
 }
 

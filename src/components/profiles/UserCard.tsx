@@ -1,7 +1,7 @@
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/primitives/Avatar';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
@@ -20,27 +20,25 @@ export function UserCard({ username, displayName, avatarUrl, subtitle, trailing 
 
   return (
     <View style={styles.wrapper}>
-      <Link href={`/user/${username}`} asChild>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel={`${displayName}, @${username}`}
-          style={({ pressed }) => [
-            styles.row,
-            { backgroundColor: pressed ? colors.surfaceRaised : 'transparent' },
-          ]}
-        >
-          <Avatar url={avatarUrl} name={displayName} size={44} />
-          <View style={styles.body}>
-            <Text variant="headline" numberOfLines={1}>
-              {displayName}
-            </Text>
-            <Text variant="footnote" color="muted" numberOfLines={1}>
-              @{username}
-              {subtitle ? ` · ${subtitle}` : ''}
-            </Text>
-          </View>
-        </Pressable>
-      </Link>
+      <LinkPressable
+        href={`/user/${username}`}
+        accessibilityLabel={`${displayName}, @${username}`}
+        style={({ pressed, hovered }) => [
+          styles.row,
+          { backgroundColor: pressed || hovered ? colors.surfaceRaised : 'transparent' },
+        ]}
+      >
+        <Avatar url={avatarUrl} name={displayName} size={44} />
+        <View style={styles.body}>
+          <Text variant="headline" numberOfLines={1}>
+            {displayName}
+          </Text>
+          <Text variant="footnote" color="muted" numberOfLines={1}>
+            @{username}
+            {subtitle ? ` · ${subtitle}` : ''}
+          </Text>
+        </View>
+      </LinkPressable>
       {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
     </View>
   );

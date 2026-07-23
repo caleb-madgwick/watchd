@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar } from '@/components/primitives/Avatar';
+import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { RatingStars } from '@/components/primitives/RatingStars';
 import { SpoilerText } from '@/components/primitives/SpoilerText';
 import { Text } from '@/components/primitives/Text';
@@ -65,15 +66,14 @@ export function ReviewCard({ review, likedByMe, onToggleLike, numberOfLines = 6 
       </View>
 
       {review.title ? (
-        <Link href={titleHref(review.title.mediaType, review.title.tmdbId)} asChild>
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={`${review.title.name}${review.title.releaseYear ? `, ${review.title.releaseYear}` : ''}`}
-            style={({ pressed }) => [
-              styles.titleRow,
-              { backgroundColor: pressed ? colors.surfaceHigh : colors.surfaceRaised },
-            ]}
-          >
+        <LinkPressable
+          href={titleHref(review.title.mediaType, review.title.tmdbId)}
+          accessibilityLabel={`${review.title.name}${review.title.releaseYear ? `, ${review.title.releaseYear}` : ''}`}
+          style={({ pressed, hovered }) => [
+            styles.titleRow,
+            { backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised },
+          ]}
+        >
             {review.title.posterUrl ? (
               <Image source={{ uri: review.title.posterUrl }} style={styles.poster} contentFit="cover" />
             ) : (
@@ -89,8 +89,7 @@ export function ReviewCard({ review, likedByMe, onToggleLike, numberOfLines = 6 
               ) : null}
             </Text>
             <Ionicons name="chevron-forward" size={14} color={colors.textMuted} />
-          </Pressable>
-        </Link>
+        </LinkPressable>
       ) : null}
 
       {review.containsSpoilers ? (
