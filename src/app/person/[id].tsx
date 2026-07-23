@@ -75,6 +75,7 @@ export default function PersonDetailScreen() {
               subtitle={item.mediaType === 'movie' ? 'Movie' : 'TV'}
               href={titleHref(item.mediaType, item.tmdbId)}
               width={itemWidth}
+              summary={item}
             />
           )}
           ListHeaderComponent={

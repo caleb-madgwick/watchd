@@ -90,6 +90,7 @@ export function BrowseTitlesScreen({ mediaType }: { mediaType: MediaType }) {
                 rating={item.tmdbRating ? item.tmdbRating / 2 : undefined}
                 href={titleHref(item.mediaType, item.tmdbId)}
                 width={itemWidth}
+                summary={item}
               />
             )}
             onEndReached={() => {

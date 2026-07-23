@@ -57,6 +57,7 @@ export default function UserWatchedScreen() {
               rating={item.rating ?? undefined}
               href={titleHref(item.title.mediaType, item.title.tmdbId)}
               width={itemWidth}
+              summary={item.title}
             />
           )}
         />

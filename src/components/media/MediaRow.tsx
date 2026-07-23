@@ -148,6 +148,7 @@ export function MediaRow({
                   rating={item.tmdbRating ? item.tmdbRating / 2 : undefined}
                   href={titleHref(item.mediaType, item.tmdbId)}
                   width={posterWidth}
+                  summary={item}
                 />
               </SettleIn>
             )}

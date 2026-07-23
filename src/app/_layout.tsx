@@ -18,6 +18,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { DiscTransitionHost } from '@/components/DiscTransitionHost';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { ToastHost } from '@/components/primitives/Toast';
 import { config } from '@/constants/config';
@@ -66,6 +67,7 @@ function AppShell() {
           />
         </View>
       </View>
+      <DiscTransitionHost />
       <ToastHost />
     </NavThemeProvider>
   );

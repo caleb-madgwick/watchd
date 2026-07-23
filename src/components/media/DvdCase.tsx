@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
 import { Animated, Platform, StyleSheet, View } from 'react-native';
 
+import { Disc } from './Disc';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { aspect, spacing } from '@/theme/tokens';
@@ -25,72 +26,7 @@ export interface DvdCaseProps {
   still?: boolean;
 }
 
-/** The disc in the tray: label print, data rings, star push-hub like the reference. */
-function Disc({ posterUrl, size, spin }: { posterUrl?: string; size: number; spin: Animated.Value }) {
-  const hub = size * 0.26;
-  const hole = size * 0.1;
-
-  return (
-    <Animated.View
-      style={[
-        styles.disc,
-        {
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-          transform: [
-            { rotate: spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '24deg'] }) },
-          ],
-        },
-      ]}
-      pointerEvents="none"
-    >
-      {posterUrl ? (
-        <Image source={{ uri: posterUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
-      ) : (
-        <LinearGradient
-          colors={['#B9C2CC', '#8E98A4', '#C9CFD6']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      )}
-      <LinearGradient
-        colors={['rgba(255,255,255,0.40)', 'rgba(255,255,255,0)', 'rgba(140,240,255,0.18)']}
-        start={{ x: 0, y: 0.1 }}
-        end={{ x: 0.9, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <LinearGradient
-        colors={['rgba(255,150,220,0.14)', 'rgba(255,255,255,0)', 'rgba(160,255,190,0.12)']}
-        start={{ x: 1, y: 0 }}
-        end={{ x: 0, y: 0.9 }}
-        style={StyleSheet.absoluteFill}
-      />
-      <View style={[styles.dataRing, { inset: size * 0.045, borderRadius: size / 2 }]} />
-      <View style={[styles.dataRing, { inset: size * 0.28, borderRadius: size / 2, opacity: 0.5 }]} />
-
-      {/* Star push-hub */}
-      <View
-        style={[
-          styles.hub,
-          { width: hub, height: hub, borderRadius: hub / 2, top: (size - hub) / 2, left: (size - hub) / 2 },
-        ]}
-      >
-        {[0, 45, 90, 135].map((deg) => (
-          <View
-            key={deg}
-            style={[
-              styles.hubSpoke,
-              { width: hub * 0.82, height: Math.max(2, hub * 0.09), transform: [{ rotate: `${deg}deg` }] },
-            ]}
-          />
-        ))}
-        <View style={[styles.hole, { width: hole, height: hole, borderRadius: hole / 2 }]} />
-      </View>
-    </Animated.View>
-  );
-}
+// Disc visuals live in ./Disc so the page transition can reuse them.
 
 /**
  * A DVD keep-case as a 3D object. At rest it stands in a 3/4 product pose:
@@ -157,7 +93,11 @@ export function DvdCase({
             ]}
           />
           <View style={{ position: 'absolute', top: (height - discSize) / 2, right: width * 0.085 }}>
-            <Disc posterUrl={posterUrl} size={discSize} spin={open} />
+            <Disc
+              posterUrl={posterUrl}
+              size={discSize}
+              rotate={open.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '24deg'] })}
+            />
           </View>
           {/* Retention clips, top and bottom like the reference shells */}
           {[0.08, 0.86].map((t) => (
@@ -308,34 +248,6 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 10,
-  },
-  disc: {
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.30)',
-  },
-  dataRing: {
-    position: 'absolute',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.28)',
-  },
-  hub: {
-    position: 'absolute',
-    backgroundColor: 'rgba(20,22,27,0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  hubSpoke: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    borderRadius: 2,
-  },
-  hole: {
-    backgroundColor: '#05060A',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
   },
   fallback: {
     alignItems: 'center',

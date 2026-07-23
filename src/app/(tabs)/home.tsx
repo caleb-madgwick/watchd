@@ -144,6 +144,7 @@ export default function HomeScreen() {
                           subtitle={`Up next · S${item.seasonNumber} E${item.episodeNumber + 1}`}
                           href={titleHref('tv', item.title.tmdbId)}
                           width={120}
+                          summary={item.title}
                         />
                       </View>
                     ))}
