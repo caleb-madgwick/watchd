@@ -123,7 +123,8 @@ export function DvdCase({
   const dark = scheme === 'dark';
   const discSize = width * 0.76;
   const shell = dark ? '#101318' : '#2C2F36';
-  const shellEdge = dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
+  // Kept dark so the hairline never reads as a bright arc at the corner curves.
+  const shellEdge = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.35)';
 
   return (
     <View style={{ width, height, overflow: 'visible' }}>
@@ -242,6 +243,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     overflow: 'visible',
+    // Rounded to match the case shell so the shadow hugs the corners instead
+    // of squaring off past them.
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 8,
     // Natural drop shadow that follows the case (and its tilt). boxShadow is
     // the form react-native-web actually renders; legacy shadow* props are
     // kept for older native fallback.
