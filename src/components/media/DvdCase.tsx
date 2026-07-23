@@ -121,14 +121,14 @@ export function DvdCase({
   }, [target, open]);
 
   const dark = scheme === 'dark';
-  const spineW = Math.max(7, width * 0.085);
+  const spineW = Math.max(9, width * 0.115);
   const coverW = width - spineW;
   const discSize = coverW * 0.78;
   const shell = dark ? '#101318' : '#2C2F36';
   const shellEdge = dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
 
   return (
-    <View style={{ width, height }}>
+    <View style={{ width, height, overflow: 'visible' }}>
       {/* Contact shadow on the shelf */}
       <Animated.View
         style={[
@@ -150,9 +150,9 @@ export function DvdCase({
           {
             transform: [
               { perspective: 1100 },
-              { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['-16deg', '-6deg'] }) },
-              { translateY: open.interpolate({ inputRange: [0, 1], outputRange: [0, -height * 0.04] }) },
-              { scale: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.03] }) },
+              { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['-23deg', '-8deg'] }) },
+              { translateY: open.interpolate({ inputRange: [0, 1], outputRange: [0, -height * 0.035] }) },
+              { scale: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] }) },
             ],
           },
         ]}
@@ -191,8 +191,28 @@ export function DvdCase({
 
         {/* ── Structural spine: stays put while the cover swings ── */}
         <View style={[styles.spineBar, { width: spineW, backgroundColor: shell, borderColor: shellEdge }]}>
+          {/* Side-facet shading so the spine reads as case depth */}
+          <LinearGradient
+            colors={['rgba(0,0,0,0.5)', 'rgba(255,255,255,0.08)', 'rgba(0,0,0,0.35)']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
           <View style={styles.spineRidge} />
-          <View style={[styles.spineRidge, { right: 1.5 }]} />
+          <View style={[styles.spineRidge, { left: undefined, right: 1.5 }]} />
+          {/* Title printed down the spine, like a real shelf */}
+          <View style={styles.spineLabelWrap} pointerEvents="none">
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.spineLabel,
+                { width: height * 0.86, fontSize: Math.max(7, spineW * 0.62) },
+              ]}
+            >
+              {title.toUpperCase()}
+            </Text>
+          </View>
         </View>
 
         {/* ── Front cover: hinges on the spine edge ── */}
@@ -318,6 +338,22 @@ const styles = StyleSheet.create({
     left: 1.5,
     width: 1,
     backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  spineLabelWrap: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spineLabel: {
+    transform: [{ rotate: '-90deg' }],
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.72)',
+    fontFamily: 'PlusJakartaSans_600SemiBold',
+    letterSpacing: 1,
   },
   coverSlot: {
     position: 'absolute',

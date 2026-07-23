@@ -84,7 +84,7 @@ export function MediaRow({
 
 const styles = StyleSheet.create({
   section: {
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   header: {
     flexDirection: 'row',
@@ -100,6 +100,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.lg,
+    // Headroom so the DVD-case pickup animation isn't clipped by the scroller.
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
   },
   empty: {
     paddingHorizontal: spacing.lg,

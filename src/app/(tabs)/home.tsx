@@ -274,6 +274,8 @@ const styles = StyleSheet.create({
   },
   hRow: {
     paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
     gap: spacing.md,
   },
   continueItem: {

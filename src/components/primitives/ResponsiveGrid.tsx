@@ -78,5 +78,7 @@ export function ResponsiveGrid<T>({
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
+    // Headroom for the DVD-case pickup animation on the first row.
+    paddingTop: spacing.lg,
   },
 });
