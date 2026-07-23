@@ -59,63 +59,61 @@ export interface RatingInputProps {
 
 /**
  * Interactive half-star rating input.
- * Tap or drag across the stars; tap the current value again to clear.
- * Screen readers get an adjustable control with increment/decrement.
+ * Each star is two discrete tap zones (left = half, right = full), so it
+ * works identically with touch, mouse, keyboard and screen readers —
+ * react-native-web provides no tap coordinates, so zones, not geometry.
+ * Tapping the current value again clears the rating.
  */
 export function RatingInput({ value, onChange, size = 34, disabled }: RatingInputProps) {
   const { colors } = useTheme();
-  const gap = spacing.xs;
-  const rowWidth = size * 5 + gap * 4;
 
-  const valueFromX = (x: number) => {
-    if (rowWidth <= 0) return 0;
-    const ratio = Math.min(1, Math.max(0, x / rowWidth));
-    return clampRating(Math.ceil(ratio * 10) / 2);
-  };
-
-  const handlePress = (x: number) => {
+  const select = (next: number) => {
     if (disabled) return;
-    const next = valueFromX(x);
-    // Tapping the same value clears the rating.
     onChange(next === value ? 0 : next);
   };
 
   return (
-    <View style={styles.inputWrap}>
-      <Pressable
-        accessibilityRole="adjustable"
-        accessibilityLabel="Star rating"
-        accessibilityValue={{ text: value > 0 ? `${value} of 5 stars` : 'Not rated' }}
-        accessibilityActions={[
-          { name: 'increment', label: 'Increase rating' },
-          { name: 'decrement', label: 'Decrease rating' },
-        ]}
-        onAccessibilityAction={(event) => {
-          if (disabled) return;
-          if (event.nativeEvent.actionName === 'increment') onChange(clampRating(value + 0.5));
-          if (event.nativeEvent.actionName === 'decrement') onChange(value <= 0.5 ? 0 : clampRating(value - 0.5));
-        }}
-        disabled={disabled}
-        onPress={(e) => handlePress(e.nativeEvent.locationX)}
-        style={[styles.pressable, { width: rowWidth, opacity: disabled ? 0.5 : 1 }]}
-        hitSlop={{ top: 10, bottom: 10, left: 4, right: 4 }}
-      >
-        <View style={[styles.row, { gap }]} pointerEvents="none">
-          {[1, 2, 3, 4, 5].map((position) => {
-            const name =
-              value >= position ? 'star' : value >= position - 0.5 ? 'star-half' : 'star-outline';
-            return (
+    <View style={[styles.inputWrap, { opacity: disabled ? 0.5 : 1 }]}>
+      <View style={styles.row}>
+        {[1, 2, 3, 4, 5].map((position) => {
+          const name =
+            value >= position ? 'star' : value >= position - 0.5 ? 'star-half' : 'star-outline';
+          return (
+            <View key={position} style={{ width: size + spacing.xs, height: size }}>
               <Ionicons
-                key={position}
                 name={name}
                 size={size}
                 color={name === 'star-outline' ? colors.borderStrong : colors.star}
               />
-            );
-          })}
-        </View>
-      </Pressable>
-      <Text variant="caption" color={value > 0 ? 'accent' : 'muted'}>
+              <View style={[StyleSheet.absoluteFill, styles.zoneRow]}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rate ${position - 0.5} stars`}
+                  accessibilityState={{ selected: value === position - 0.5, disabled: disabled ?? false }}
+                  disabled={disabled}
+                  onPress={() => select(position - 0.5)}
+                  hitSlop={{ top: 10, bottom: 10 }}
+                  style={styles.zone}
+                />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Rate ${position} star${position === 1 ? '' : 's'}`}
+                  accessibilityState={{ selected: value === position, disabled: disabled ?? false }}
+                  disabled={disabled}
+                  onPress={() => select(position)}
+                  hitSlop={{ top: 10, bottom: 10 }}
+                  style={styles.zone}
+                />
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <Text
+        variant="caption"
+        color={value > 0 ? 'accent' : 'muted'}
+        accessibilityLiveRegion="polite"
+      >
         {value > 0 ? `${value} / 5` : 'Tap to rate'}
       </Text>
     </View>
@@ -131,7 +129,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  pressable: {
-    paddingVertical: spacing.xs,
+  zoneRow: {
+    flexDirection: 'row',
+  },
+  zone: {
+    flex: 1,
+    height: '100%',
   },
 });

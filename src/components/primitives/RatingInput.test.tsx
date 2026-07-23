@@ -4,39 +4,43 @@ import { RatingInput } from './RatingStars';
 import { renderWithTheme } from '@/test/renderWithTheme';
 
 describe('RatingInput', () => {
-  it('exposes an adjustable control with the current value', () => {
-    renderWithTheme(<RatingInput value={3.5} onChange={jest.fn()} />);
-    const control = screen.getByLabelText('Star rating');
-    expect(control.props.accessibilityValue).toEqual({ text: '3.5 of 5 stars' });
-  });
-
-  it('supports accessibility increment/decrement in half-star steps', () => {
+  it('sets a full-star rating from its tap zone', () => {
     const onChange = jest.fn();
-    renderWithTheme(<RatingInput value={3.5} onChange={onChange} />);
-    const control = screen.getByLabelText('Star rating');
-
-    fireEvent(control, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+    renderWithTheme(<RatingInput value={0} onChange={onChange} />);
+    fireEvent.press(screen.getByLabelText('Rate 4 stars'));
     expect(onChange).toHaveBeenLastCalledWith(4);
-
-    fireEvent(control, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
-    expect(onChange).toHaveBeenLastCalledWith(3);
   });
 
-  it('clears when decrementing from the minimum', () => {
+  it('sets a half-star rating from its tap zone', () => {
     const onChange = jest.fn();
-    renderWithTheme(<RatingInput value={0.5} onChange={onChange} />);
-    fireEvent(screen.getByLabelText('Star rating'), 'accessibilityAction', {
-      nativeEvent: { actionName: 'decrement' },
-    });
+    renderWithTheme(<RatingInput value={0} onChange={onChange} />);
+    fireEvent.press(screen.getByLabelText('Rate 3.5 stars'));
+    expect(onChange).toHaveBeenLastCalledWith(3.5);
+  });
+
+  it('clears when tapping the current value again', () => {
+    const onChange = jest.fn();
+    renderWithTheme(<RatingInput value={4} onChange={onChange} />);
+    fireEvent.press(screen.getByLabelText('Rate 4 stars'));
     expect(onChange).toHaveBeenLastCalledWith(0);
   });
 
-  it('maps tap position to a rating and toggles the same value off', () => {
+  it('exposes ten labelled zones covering the half-star scale', () => {
+    renderWithTheme(<RatingInput value={0} onChange={jest.fn()} />);
+    expect(screen.getByLabelText('Rate 0.5 stars')).toBeTruthy();
+    expect(screen.getByLabelText('Rate 1 star')).toBeTruthy();
+    expect(screen.getByLabelText('Rate 5 stars')).toBeTruthy();
+  });
+
+  it('announces the current value', () => {
+    renderWithTheme(<RatingInput value={3.5} onChange={jest.fn()} />);
+    expect(screen.getByText('3.5 / 5')).toBeTruthy();
+  });
+
+  it('ignores presses when disabled', () => {
     const onChange = jest.fn();
-    renderWithTheme(<RatingInput value={0} onChange={onChange} size={30} />);
-    const control = screen.getByLabelText('Star rating');
-    // Row width = 30*5 + 4*4 = 166; tapping the far right = 5 stars.
-    fireEvent.press(control, { nativeEvent: { locationX: 165 } });
-    expect(onChange).toHaveBeenLastCalledWith(5);
+    renderWithTheme(<RatingInput value={0} onChange={onChange} disabled />);
+    fireEvent.press(screen.getByLabelText('Rate 4 stars'));
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

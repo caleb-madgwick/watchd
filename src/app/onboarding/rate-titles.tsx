@@ -56,8 +56,8 @@ export default function RateTitlesStep() {
     }
   };
 
-  const onFinish = async () => {
-    if (!session) return;
+  const completeOnboarding = async () => {
+    if (!session || finishing) return;
     setFinishing(true);
     try {
       await updateProfile(session.user.id, { onboarding_completed: true });
@@ -81,9 +81,10 @@ export default function RateTitlesStep() {
           ? 'Finish setup'
           : `Rate ${REQUIRED_RATINGS - ratedCount} more to finish`
       }
-      onAction={onFinish}
+      onAction={completeOnboarding}
       actionLoading={finishing}
       actionDisabled={ratedCount < REQUIRED_RATINGS}
+      onSkip={completeOnboarding}
     >
       {isLoading ? (
         <CardListSkeleton count={5} />
