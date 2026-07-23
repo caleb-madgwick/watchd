@@ -110,7 +110,7 @@ export function useRecentReviewsFromFollows() {
 
       const { data, error } = await client
         .from('reviews')
-        .select('id, rating, body, contains_spoilers, like_count, created_at, profiles(id, username, display_name, avatar_path), titles(*)')
+        .select('id, rating, body, contains_spoilers, like_count, created_at, profiles!reviews_user_id_fkey(id, username, display_name, avatar_path), titles(*)')
         .in('user_id', followingIds)
         .eq('published', true)
         .order('created_at', { ascending: false })

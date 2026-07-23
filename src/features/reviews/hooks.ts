@@ -107,7 +107,7 @@ export function useTitleReviews(title: Pick<TitleSummary, 'tmdbId' | 'mediaType'
       const { data, error } = await client
         .from('reviews')
         .select(
-          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles(id, username, display_name, avatar_path)',
+          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles!reviews_user_id_fkey(id, username, display_name, avatar_path)',
         )
         .eq('title_id', titleRow.id)
         .eq('published', true)
@@ -133,7 +133,7 @@ export function useReview(reviewId: string | undefined) {
       const { data, error } = await supabase!
         .from('reviews')
         .select(
-          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles(id, username, display_name, avatar_path), titles(tmdb_id, media_type, title, poster_path, release_date)',
+          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles!reviews_user_id_fkey(id, username, display_name, avatar_path), titles(tmdb_id, media_type, title, poster_path, release_date)',
         )
         .eq('id', reviewId!)
         .eq('published', true)
@@ -156,7 +156,7 @@ export function useUserReviews(profileUserId: string | undefined) {
       const { data, error } = await supabase!
         .from('reviews')
         .select(
-          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles(id, username, display_name, avatar_path), titles(tmdb_id, media_type, title, poster_path, release_date)',
+          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles!reviews_user_id_fkey(id, username, display_name, avatar_path), titles(tmdb_id, media_type, title, poster_path, release_date)',
         )
         .eq('user_id', profileUserId!)
         .eq('published', true)
