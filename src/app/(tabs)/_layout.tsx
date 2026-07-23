@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
 import { config } from '@/constants/config';
@@ -27,6 +28,13 @@ export default function TabsLayout() {
   const { isWide, width } = useBreakpoint();
   // Between phone and sidebar widths, lay tab labels beside icons, not under.
   const besideIcon = width >= 600;
+  // The static export renders at width 0 (tab bar visible), and React never
+  // reconciles style attributes during hydration — so a stale visible tab bar
+  // would stick on desktop. Render it hidden until after hydration, then let
+  // the post-mount re-render reveal it only on narrow screens.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const hideTabBar = isWide || !hydrated;
 
   if (!config.demoMode) {
     if (!initializing && !session) {
@@ -44,7 +52,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: colors.bg },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: isWide
+        tabBarStyle: hideTabBar
           ? { display: 'none' }
           : {
               backgroundColor: colors.tabBar,
