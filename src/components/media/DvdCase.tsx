@@ -121,9 +121,7 @@ export function DvdCase({
   }, [target, open]);
 
   const dark = scheme === 'dark';
-  const spineW = Math.max(9, width * 0.115);
-  const coverW = width - spineW;
-  const discSize = coverW * 0.78;
+  const discSize = width * 0.76;
   const shell = dark ? '#101318' : '#2C2F36';
   const shellEdge = dark ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.10)';
 
@@ -150,7 +148,7 @@ export function DvdCase({
           {
             transform: [
               { perspective: 1100 },
-              { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['-23deg', '-8deg'] }) },
+              { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-5deg'] }) },
               { translateY: open.interpolate({ inputRange: [0, 1], outputRange: [0, -height * 0.035] }) },
               { scale: open.interpolate({ inputRange: [0, 1], outputRange: [1, 1.025] }) },
             ],
@@ -167,16 +165,16 @@ export function DvdCase({
                 height: discSize * 1.1,
                 borderRadius: (discSize * 1.1) / 2,
                 top: (height - discSize * 1.1) / 2,
-                right: coverW * 0.055,
+                right: width * 0.055,
               },
             ]}
           />
-          <View style={{ position: 'absolute', top: (height - discSize) / 2, right: coverW * 0.09 }}>
+          <View style={{ position: 'absolute', top: (height - discSize) / 2, right: width * 0.085 }}>
             <Disc posterUrl={posterUrl} size={discSize} spin={open} />
           </View>
           {/* Retention clips, top and bottom like the reference shells */}
           {[0.08, 0.86].map((t) => (
-            <View key={t} style={[styles.clipH, { top: height * t, left: spineW + coverW * 0.06 }]} />
+            <View key={t} style={[styles.clipH, { top: height * t, left: width * 0.045 }]} />
           ))}
           {/* Shade that lifts as the cover opens */}
           <Animated.View
@@ -189,44 +187,18 @@ export function DvdCase({
           />
         </View>
 
-        {/* ── Structural spine: stays put while the cover swings ── */}
-        <View style={[styles.spineBar, { width: spineW, backgroundColor: shell, borderColor: shellEdge }]}>
-          {/* Side-facet shading so the spine reads as case depth */}
-          <LinearGradient
-            colors={['rgba(0,0,0,0.5)', 'rgba(255,255,255,0.08)', 'rgba(0,0,0,0.35)']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-          <View style={styles.spineRidge} />
-          <View style={[styles.spineRidge, { left: undefined, right: 1.5 }]} />
-          {/* Title printed down the spine, like a real shelf */}
-          <View style={styles.spineLabelWrap} pointerEvents="none">
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.spineLabel,
-                { width: height * 0.86, fontSize: Math.max(7, spineW * 0.62) },
-              ]}
-            >
-              {title.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        {/* ── Front cover: hinges on the spine edge ── */}
+        {/* ── Front cover: hinges on the case's left edge ── */}
         <Animated.View
           style={[
             styles.coverSlot,
             {
-              left: spineW,
-              width: coverW,
+              left: 0,
+              width,
               transform: [
                 { perspective: 900 },
-                { translateX: -coverW / 2 },
+                { translateX: -width / 2 },
                 { rotateY: open.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-72deg'] }) },
-                { translateX: coverW / 2 },
+                { translateX: width / 2 },
               ],
             },
           ]}
@@ -321,40 +293,6 @@ const styles = StyleSheet.create({
   trayShade: {
     backgroundColor: '#000000',
   },
-  spineBar: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    borderTopLeftRadius: 3,
-    borderBottomLeftRadius: 3,
-    borderRightWidth: StyleSheet.hairlineWidth,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  spineRidge: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 1.5,
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  spineLabelWrap: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spineLabel: {
-    transform: [{ rotate: '-90deg' }],
-    textAlign: 'center',
-    color: 'rgba(255,255,255,0.72)',
-    fontFamily: 'PlusJakartaSans_600SemiBold',
-    letterSpacing: 1,
-  },
   coverSlot: {
     position: 'absolute',
     top: 0,
@@ -362,6 +300,8 @@ const styles = StyleSheet.create({
   },
   cover: {
     flex: 1,
+    borderTopLeftRadius: 4,
+    borderBottomLeftRadius: 4,
     borderTopRightRadius: 8,
     borderBottomRightRadius: 8,
     borderWidth: StyleSheet.hairlineWidth,
