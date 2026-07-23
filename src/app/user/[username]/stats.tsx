@@ -74,7 +74,14 @@ function BarRow({ label, count, max }: { label: string; count: number; max: numb
 
 function StatsBody({ stats }: { stats: UserStats }) {
   const { colors } = useTheme();
-  const ratingMax = Math.max(1, ...Object.values(stats.rating_distribution ?? {}));
+  // Postgres serialises numeric(2,1) keys as "5.0"/"4.0"; normalise so whole
+  // stars match RATING_ORDER's "5"/"4" lookups.
+  const ratingDistribution: Record<string, number> = {};
+  for (const [key, count] of Object.entries(stats.rating_distribution ?? {})) {
+    const normalised = String(Number(key));
+    ratingDistribution[normalised] = (ratingDistribution[normalised] ?? 0) + count;
+  }
+  const ratingMax = Math.max(1, ...Object.values(ratingDistribution));
   const decadeMax = Math.max(1, ...stats.top_decades.map((d) => d.count));
   const hasAny = stats.films_watched + stats.shows_watched > 0;
 
@@ -108,13 +115,13 @@ function StatsBody({ stats }: { stats: UserStats }) {
         </Text>
       ) : null}
 
-      {Object.keys(stats.rating_distribution ?? {}).length > 0 ? (
+      {Object.keys(ratingDistribution).length > 0 ? (
         <Section title="Ratings">
           {RATING_ORDER.map((r) => (
             <BarRow
               key={r}
               label={`${r}★`}
-              count={stats.rating_distribution[r.toString()] ?? 0}
+              count={ratingDistribution[r.toString()] ?? 0}
               max={ratingMax}
             />
           ))}

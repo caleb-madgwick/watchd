@@ -85,6 +85,9 @@ export const fontFamily = {
   bodyMedium: 'PlusJakartaSans_500Medium',
   bodySemiBold: 'PlusJakartaSans_600SemiBold',
   bodyBold: 'PlusJakartaSans_700Bold',
+  // Caveat: the clerk's marker — greetings, taglines, staff-pick notes.
+  hand: 'Caveat_600SemiBold',
+  handBold: 'Caveat_700Bold',
 } as const;
 
 export interface TypeStyle {
@@ -106,6 +109,9 @@ export const typeScale = {
   footnote: { fontSize: 13, lineHeight: 18, fontFamily: fontFamily.body },
   caption: { fontSize: 12, lineHeight: 16, fontFamily: fontFamily.bodyMedium },
   micro: { fontSize: 11, lineHeight: 14, fontFamily: fontFamily.bodySemiBold, letterSpacing: 0.4 },
+  // Handwritten notes — Caveat runs small for its point size, so these sit larger.
+  hand: { fontSize: 21, lineHeight: 27, fontFamily: fontFamily.hand, letterSpacing: 0.2 },
+  handLarge: { fontSize: 28, lineHeight: 34, fontFamily: fontFamily.handBold, letterSpacing: 0.2 },
 } as const satisfies Record<string, TypeStyle>;
 
 export type TypeVariant = keyof typeof typeScale;

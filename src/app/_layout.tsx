@@ -1,6 +1,7 @@
 import '@/global.css';
 
 import { Anton_400Regular } from '@expo-google-fonts/anton';
+import { Caveat_600SemiBold, Caveat_700Bold } from '@expo-google-fonts/caveat';
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -93,6 +94,8 @@ export default function RootLayout() {
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
     Anton_400Regular,
+    Caveat_600SemiBold,
+    Caveat_700Bold,
   });
 
   useEffect(() => {

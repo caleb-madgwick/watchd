@@ -120,7 +120,7 @@ export default function HomeScreen() {
                 </>
               ) : null}
               <Text
-                variant={isWide ? 'title2' : 'callout'}
+                variant={isWide ? 'handLarge' : 'hand'}
                 color="secondary"
                 style={styles.greeting}
               >

@@ -145,12 +145,7 @@ export function TitleHero({
                   </Pressable>
                 ) : null}
                 {tagline ? (
-                  <Text
-                    variant="footnote"
-                    color="muted"
-                    numberOfLines={1}
-                    style={styles.tagline}
-                  >
+                  <Text variant="hand" color="secondary" numberOfLines={1} style={styles.tagline}>
                     “{tagline}”
                   </Text>
                 ) : null}
@@ -221,7 +216,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   tagline: {
-    fontStyle: 'italic',
     flexShrink: 1,
   },
   back: {

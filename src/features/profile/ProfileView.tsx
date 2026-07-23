@@ -142,7 +142,7 @@ function MembershipCard({
             @{profile.username}
           </Text>
           {profile.bio ? (
-            <Text variant="footnote" color="secondary" numberOfLines={2} style={styles.cardBio}>
+            <Text variant="hand" color="secondary" numberOfLines={2} style={styles.cardBio}>
               {profile.bio}
             </Text>
           ) : null}
@@ -344,26 +344,34 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
             },
           ]}
         >
-          <StatCell value={stats.data?.watchedMovies ?? '–'} label="movies" />
-          <StatCell value={stats.data?.watchedShows ?? '–'} label="shows" />
-          <View style={styles.statCell}>
-            {stats.data?.averageRating ? (
-              <>
-                <RatingStars value={stats.data.averageRating} size={12} />
-                <Text variant="caption" color="muted">
-                  avg of {stats.data.ratings}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Text variant="title3">–</Text>
-                <Text variant="caption" color="muted">
-                  ratings
-                </Text>
-              </>
-            )}
+          <View style={styles.statsRow}>
+            <StatCell value={stats.data?.watchedMovies ?? '–'} label="movies" />
+            <StatCell value={stats.data?.watchedShows ?? '–'} label="shows" />
+            <View style={styles.statCell}>
+              {stats.data?.averageRating ? (
+                <>
+                  <RatingStars value={stats.data.averageRating} size={12} />
+                  <Text variant="caption" color="muted">
+                    avg of {stats.data.ratings}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text variant="title3">–</Text>
+                  <Text variant="caption" color="muted">
+                    ratings
+                  </Text>
+                </>
+              )}
+            </View>
+            <StatCell value={stats.data?.reviews ?? '–'} label="reviews" />
           </View>
-          <StatCell value={stats.data?.reviews ?? '–'} label="reviews" />
+          <View style={[styles.statsFooter, { borderTopColor: colors.border }]}>
+            <Text variant="caption" color="accent" style={styles.statsFooterLabel}>
+              SEE FULL STATS
+            </Text>
+            <Ionicons name="arrow-forward" size={13} color={colors.accent} />
+          </View>
         </LinkPressable>
 
         {isSelf ? (
@@ -692,12 +700,26 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   stats: {
-    flexDirection: 'row',
     marginHorizontal: spacing.lg,
     marginTop: spacing.xl,
     borderRadius: radius.md,
     borderWidth: 1,
+    overflow: 'hidden',
+  },
+  statsRow: {
+    flexDirection: 'row',
     paddingVertical: spacing.md,
+  },
+  statsFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  statsFooterLabel: {
+    letterSpacing: 1.2,
   },
   challengeCard: {
     marginHorizontal: spacing.lg,

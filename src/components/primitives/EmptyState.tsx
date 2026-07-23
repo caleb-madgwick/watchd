@@ -39,7 +39,7 @@ export function EmptyState({
         {title}
       </Text>
       {message ? (
-        <Text variant="callout" color="secondary" align="center" style={styles.message}>
+        <Text variant="hand" color="secondary" align="center" style={styles.message}>
           {message}
         </Text>
       ) : null}

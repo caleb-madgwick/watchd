@@ -95,7 +95,7 @@ export function ReviewCard({ review, likedByMe, onToggleLike, numberOfLines = 6 
       {review.containsSpoilers ? (
         <SpoilerText numberOfLines={numberOfLines}>{review.body}</SpoilerText>
       ) : (
-        <Text variant="callout" color="secondary" numberOfLines={numberOfLines}>
+        <Text variant="hand" color="secondary" numberOfLines={numberOfLines}>
           {review.body}
         </Text>
       )}

@@ -89,7 +89,7 @@ function Slide({ title, width }: { title: TitleSummary; width: number }) {
           >
             {title.title.toUpperCase()}
           </Text>
-          <Text variant="subhead" style={{ color: 'rgba(244,241,234,0.8)' }}>
+          <Text variant="hand" style={{ color: 'rgba(244,241,234,0.85)' }}>
             {[title.releaseYear, mediaTypeLabel(title.mediaType), 'Tap for tonight’s pick']
               .filter(Boolean)
               .join(' · ')}
