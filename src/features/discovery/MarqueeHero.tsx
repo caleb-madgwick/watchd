@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
@@ -12,6 +12,7 @@ import { prefersReducedMotion } from '@/utils/motion';
 import { mediaTypeLabel, titleHref } from '@/utils/titles';
 
 const BULB_COUNT = 14;
+const ROTATE_MS = 6000;
 
 /** One row of marquee bulbs; three phase groups chase each other. */
 function BulbRow({ phases }: { phases: [Animated.Value, Animated.Value, Animated.Value] }) {
@@ -35,15 +36,19 @@ function BulbRow({ phases }: { phases: [Animated.Value, Animated.Value, Animated
   );
 }
 
-/** "NOW SHOWING" marquee: featured title in a bulb-lit frame. */
-export function MarqueeHero({ title }: { title: TitleSummary }) {
+/** "NOW SHOWING" marquee carousel: rotating featured titles in a bulb-lit frame. */
+export function MarqueeHero({ titles }: { titles: TitleSummary[] }) {
   const { scheme } = useTheme();
+  const [index, setIndex] = useState(0);
+  const [textFade] = useState(() => new Animated.Value(1));
+  const pausedRef = useRef(false);
   const [phases] = useState<[Animated.Value, Animated.Value, Animated.Value]>(() => [
     new Animated.Value(1),
     new Animated.Value(0.4),
     new Animated.Value(0.1),
   ]);
 
+  // Chasing lights around the frame.
   useEffect(() => {
     if (prefersReducedMotion()) {
       phases.forEach((phase) => phase.setValue(1));
@@ -62,29 +67,63 @@ export function MarqueeHero({ title }: { title: TitleSummary }) {
     return () => loops.forEach((loop) => loop.stop());
   }, [phases]);
 
+  const goTo = (next: number) => {
+    if (next === index || titles.length === 0) return;
+    if (prefersReducedMotion()) {
+      setIndex(next % titles.length);
+      return;
+    }
+    Animated.timing(textFade, { toValue: 0, duration: 160, useNativeDriver: true }).start(() => {
+      setIndex(next % titles.length);
+      Animated.timing(textFade, { toValue: 1, duration: 260, useNativeDriver: true }).start();
+    });
+  };
+
+  // Auto-rotate; paused while hovered, off entirely under reduced motion.
+  const goToRef = useRef(goTo);
+  goToRef.current = goTo;
+  useEffect(() => {
+    if (prefersReducedMotion() || titles.length < 2) return;
+    const timer = setInterval(() => {
+      if (!pausedRef.current) goToRef.current(index + 1);
+    }, ROTATE_MS);
+    return () => clearInterval(timer);
+  }, [index, titles.length]);
+
+  const title = titles[Math.min(index, titles.length - 1)];
+  if (!title) return null;
+
   const frame = scheme === 'dark' ? '#241C15' : '#4A3423';
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.frame, { backgroundColor: frame }]}>
+      <View
+        style={[styles.frame, { backgroundColor: frame }]}
+        onPointerEnter={() => {
+          pausedRef.current = true;
+        }}
+        onPointerLeave={() => {
+          pausedRef.current = false;
+        }}
+      >
         <BulbRow phases={phases} />
         <LinkPressable
           href={titleHref(title.mediaType, title.tmdbId)}
           accessibilityLabel={`Now showing: ${title.title}`}
-          style={({ pressed, hovered }) => ({
+          style={({ pressed }) => ({
             borderRadius: radius.sm,
             overflow: 'hidden',
             opacity: pressed ? 0.92 : 1,
-            transform: [{ scale: hovered ? 1.005 : 1 }],
           })}
         >
           <View style={styles.stage}>
             {title.backdropUrl ? (
+              // expo-image crossfades automatically when the source changes.
               <Image
                 source={{ uri: title.backdropUrl }}
                 style={StyleSheet.absoluteFill}
                 contentFit="cover"
-                transition={300}
+                transition={550}
                 accessibilityLabel={`${title.title} backdrop`}
               />
             ) : null}
@@ -93,7 +132,7 @@ export function MarqueeHero({ title }: { title: TitleSummary }) {
               locations={[0, 0.55, 1]}
               style={StyleSheet.absoluteFill}
             />
-            <View style={styles.stageContent}>
+            <Animated.View style={[styles.stageContent, { opacity: textFade }]}>
               <View style={[styles.nowShowing, { backgroundColor: palette.marigold400 }]}>
                 <Text
                   style={{
@@ -124,7 +163,30 @@ export function MarqueeHero({ title }: { title: TitleSummary }) {
                   .filter(Boolean)
                   .join(' · ')}
               </Text>
-            </View>
+            </Animated.View>
+
+            {titles.length > 1 ? (
+              <View style={styles.dots}>
+                {titles.map((item, i) => (
+                  <Pressable
+                    key={`${item.mediaType}-${item.tmdbId}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Show feature ${i + 1} of ${titles.length}: ${item.title}`}
+                    accessibilityState={{ selected: i === index }}
+                    onPress={() => goTo(i)}
+                    hitSlop={8}
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor:
+                          i === index ? palette.marigold400 : 'rgba(244,241,234,0.35)',
+                        width: i === index ? 18 : 7,
+                      },
+                    ]}
+                  />
+                ))}
+              </View>
+            ) : null}
           </View>
         </LinkPressable>
         <BulbRow phases={phases} />
@@ -157,7 +219,7 @@ const styles = StyleSheet.create({
     boxShadow: '0px 0px 6px rgba(245,178,26,0.8)',
   },
   stage: {
-    height: 210,
+    height: 230,
     borderRadius: radius.sm,
     overflow: 'hidden',
     backgroundColor: '#0B0D10',
@@ -165,6 +227,7 @@ const styles = StyleSheet.create({
   },
   stageContent: {
     padding: spacing.xl,
+    paddingBottom: spacing['2xl'] + spacing.sm,
     gap: spacing.sm,
   },
   nowShowing: {
@@ -173,5 +236,19 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 3,
     transform: [{ skewX: '-6deg' }],
+  },
+  dots: {
+    position: 'absolute',
+    bottom: spacing.md,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  dot: {
+    height: 7,
+    borderRadius: 4,
   },
 });

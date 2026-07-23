@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { CastRow } from '@/components/media/CastRow';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
+import { ReelScroller } from '@/components/primitives/ReelScroller';
 import { MediaRow } from '@/components/media/MediaRow';
 import { RatingSummary } from '@/components/media/RatingSummary';
 import { WhereToWatch } from '@/components/media/WhereToWatch';
@@ -18,6 +19,7 @@ import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { useCommunitySummary } from '@/features/tracking/queries';
 import { TitleActionBar } from '@/features/tracking/TitleActionBar';
 import { TvProgressPanel } from '@/features/tracking/TvProgressPanel';
+import { useTitleEnrichment } from '@/features/titles/enrich';
 import { useTvDetails } from '@/features/titles/hooks';
 import { TitleHero } from '@/features/titles/TitleHero';
 import { TitleReviewsSection } from '@/features/titles/TitleReviewsSection';
@@ -35,6 +37,7 @@ export default function TvDetailScreen() {
 
   const details = useTvDetails(validId ? tmdbId : undefined);
   const community = useCommunitySummary(validId ? { tmdbId, mediaType: 'tv' } : undefined);
+  useTitleEnrichment(details.data);
 
   useEffect(() => {
     if (validId) track('title_opened', { mediaType: 'tv', tmdbId });
@@ -141,10 +144,9 @@ export default function TvDetailScreen() {
               <Text variant="title3" style={styles.sectionHeading}>
                 Seasons
               </Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
+              <ReelScroller
                 contentContainerStyle={styles.seasonsRow}
+                paddleCenter={132 / aspect.poster / 2}
               >
                 {tv.seasons.map((season) => (
                   <LinkPressable
@@ -179,7 +181,7 @@ export default function TvDetailScreen() {
                       </View>
                   </LinkPressable>
                 ))}
-              </ScrollView>
+              </ReelScroller>
             </View>
           ) : null}
 

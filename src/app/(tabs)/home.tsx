@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MediaRow } from '@/components/media/MediaRow';
 import { PosterCard } from '@/components/media/PosterCard';
+import { ReelScroller } from '@/components/primitives/ReelScroller';
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { ErrorState } from '@/components/primitives/ErrorState';
@@ -26,7 +27,7 @@ import { useWatchlist } from '@/features/tracking/queries';
 import { supabase } from '@/lib/supabase/client';
 import { posterUrl } from '@/lib/tmdb/images';
 import { useAuth } from '@/providers/AuthProvider';
-import { contentWidth, spacing } from '@/theme/tokens';
+import { aspect, contentWidth, spacing } from '@/theme/tokens';
 import type { TitleSummary } from '@/types/domain';
 import { titleHref, yearFromDate } from '@/utils/titles';
 
@@ -81,8 +82,9 @@ export default function HomeScreen() {
 
   const firstName = profile?.displayName.split(' ')[0];
   const everythingFailed = trendingMovies.isError && trendingTv.isError;
-  const featured =
-    trendingMovies.data?.find((t) => t.backdropUrl) ?? trendingTv.data?.find((t) => t.backdropUrl);
+  const featured = [...(trendingMovies.data ?? []), ...(trendingTv.data ?? [])]
+    .filter((t) => t.backdropUrl)
+    .slice(0, 6);
 
   return (
     <Screen>
@@ -123,14 +125,17 @@ export default function HomeScreen() {
             />
           ) : (
             <View style={styles.sections}>
-              {featured ? <MarqueeHero title={featured} /> : null}
+              {featured.length > 0 ? <MarqueeHero titles={featured} /> : null}
 
               {continueWatching.data && continueWatching.data.length > 0 ? (
                 <View style={styles.section}>
                   <Text variant="title3" style={styles.sectionHeading}>
                     Continue watching
                   </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hRow}>
+                  <ReelScroller
+                    contentContainerStyle={styles.hRow}
+                    paddleCenter={spacing.lg + 120 / aspect.poster / 2}
+                  >
                     {continueWatching.data.map((item) => (
                       <View key={`${item.title.tmdbId}`} style={styles.continueItem}>
                         <PosterCard
@@ -142,7 +147,7 @@ export default function HomeScreen() {
                         />
                       </View>
                     ))}
-                  </ScrollView>
+                  </ReelScroller>
                 </View>
               ) : null}
 
