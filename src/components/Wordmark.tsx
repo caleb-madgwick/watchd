@@ -72,6 +72,7 @@ const styles = StyleSheet.create({
   badge: {
     alignSelf: 'flex-start',
     borderWidth: 2,
+    boxShadow: '4px 4px 0px rgba(0,0,0,0.45)',
     shadowOpacity: 0.45,
     shadowRadius: 0,
     shadowOffset: { width: 4, height: 4 },

@@ -242,8 +242,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     overflow: 'visible',
-    // Natural drop shadow that follows the case (and its tilt) instead of a
-    // painted ellipse on the shelf.
+    // Natural drop shadow that follows the case (and its tilt). boxShadow is
+    // the form react-native-web actually renders; legacy shadow* props are
+    // kept for older native fallback.
+    boxShadow: '0px 9px 16px rgba(0,0,0,0.45)',
     shadowColor: '#000000',
     shadowOpacity: 0.35,
     shadowRadius: 12,

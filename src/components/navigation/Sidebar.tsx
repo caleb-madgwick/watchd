@@ -42,7 +42,6 @@ const BROWSE_NAV: NavItem[] = [
 ];
 
 const LIBRARY_NAV: NavItem[] = [
-  { href: '/profile', title: 'Profile', icon: 'person-circle-outline', iconActive: 'person-circle' },
   { href: '/watchlist', title: 'Watchlist', icon: 'bookmark-outline', iconActive: 'bookmark' },
   { href: '/friends', title: 'Friends', icon: 'people-outline', iconActive: 'people' },
   { href: '/shared', title: 'Shared', icon: 'albums-outline', iconActive: 'albums', alsoMatch: ['/shared'] },
