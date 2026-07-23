@@ -1,5 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
+
+import { prefersReducedMotion } from '@/utils/motion';
 
 import { Text } from './Text';
 import { useTheme } from '@/theme/ThemeContext';
@@ -66,15 +69,24 @@ export interface RatingInputProps {
  */
 export function RatingInput({ value, onChange, size = 34, disabled }: RatingInputProps) {
   const { colors } = useTheme();
+  const [pop] = useState(() => new Animated.Value(1));
 
   const select = (next: number) => {
     if (disabled) return;
-    onChange(next === value ? 0 : next);
+    const cleared = next === value;
+    onChange(cleared ? 0 : next);
+    if (!cleared && !prefersReducedMotion()) {
+      pop.setValue(1);
+      Animated.sequence([
+        Animated.spring(pop, { toValue: 1.16, useNativeDriver: true, speed: 40, bounciness: 0 }),
+        Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 9 }),
+      ]).start();
+    }
   };
 
   return (
     <View style={[styles.inputWrap, { opacity: disabled ? 0.5 : 1 }]}>
-      <View style={styles.row}>
+      <Animated.View style={[styles.row, { transform: [{ scale: pop }] }]}>
         {[1, 2, 3, 4, 5].map((position) => {
           const name =
             value >= position ? 'star' : value >= position - 0.5 ? 'star-half' : 'star-outline';
@@ -108,7 +120,7 @@ export function RatingInput({ value, onChange, size = 34, disabled }: RatingInpu
             </View>
           );
         })}
-      </View>
+      </Animated.View>
       <Text
         variant="caption"
         color={value > 0 ? 'accent' : 'muted'}

@@ -48,40 +48,6 @@ export interface Theme {
   colors: ThemeColors;
 }
 
-export const darkTheme: Theme = {
-  scheme: 'dark',
-  colors: {
-    bg: palette.ink900,
-    surface: palette.ink800,
-    surfaceRaised: palette.ink750,
-    surfaceHigh: palette.ink700,
-    border: 'rgba(255,255,255,0.08)',
-    borderStrong: 'rgba(255,255,255,0.16)',
-
-    text: palette.cream,
-    textSecondary: palette.ink200,
-    textMuted: palette.ink300,
-    onAccent: '#04160F',
-
-    accent: palette.jade400,
-    accentPressed: palette.jade500,
-    accentSoft: 'rgba(47,203,146,0.15)',
-
-    success: palette.teal400,
-    danger: palette.red500,
-    dangerPressed: palette.red600,
-    info: palette.cobalt400,
-
-    star: palette.marigold400,
-    glow: 'rgba(47,203,146,0.5)',
-    scrim: 'rgba(4,5,7,0.72)',
-    heroScrim: ['rgba(11,13,16,0.10)', 'rgba(11,13,16,0.55)', 'rgba(11,13,16,1)'],
-    skeletonBase: palette.ink750,
-    skeletonHighlight: palette.ink700,
-    tabBar: 'rgba(16,19,24,0.94)',
-  },
-};
-
 export const lightTheme: Theme = {
   scheme: 'light',
   colors: {

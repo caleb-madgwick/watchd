@@ -50,8 +50,16 @@ export function Button({
   const variantStyles = (pressed: boolean): { container: ViewStyle; textColor: string } => {
     switch (variant) {
       case 'primary':
+        // Sticker button: hard offset shadow that collapses when pressed,
+        // so the button physically pushes down.
         return {
-          container: { backgroundColor: pressed ? colors.accentPressed : colors.accent },
+          container: {
+            backgroundColor: pressed ? colors.accentPressed : colors.accent,
+            borderWidth: 2,
+            borderColor: 'rgba(0,0,0,0.35)',
+            boxShadow: pressed ? '0px 0px 0px rgba(0,0,0,0.35)' : '3px 3px 0px rgba(0,0,0,0.35)',
+            transform: pressed ? [{ translateX: 2 }, { translateY: 2 }] : [],
+          },
           textColor: colors.onAccent,
         };
       case 'secondary':

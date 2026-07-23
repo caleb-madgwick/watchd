@@ -81,8 +81,8 @@ export default function WatchlistScreen() {
       ) : (watchlist.data?.length ?? 0) === 0 ? (
         <EmptyState
           icon="bookmark-outline"
-          title="Nothing saved yet"
-          message="Tap the bookmark on any movie or show to add it here."
+          title="Nothing on hold"
+          message="Tap the bookmark on any case and we’ll keep it behind the counter for you."
         />
       ) : (
         <FlatList

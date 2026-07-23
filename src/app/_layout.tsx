@@ -9,7 +9,6 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { useFonts } from 'expo-font';
 import {
-  DarkTheme,
   DefaultTheme,
   ThemeProvider as NavThemeProvider,
   Stack,
@@ -33,16 +32,15 @@ SplashScreen.preventAutoHideAsync();
 const FULLSCREEN_PREFIXES = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password', '/onboarding'];
 
 function AppShell() {
-  const { colors, scheme } = useTheme();
+  const { colors } = useTheme();
   const { session } = useAuth();
   const { isWide } = useBreakpoint();
   const pathname = usePathname();
 
-  const baseNavTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
-    ...baseNavTheme,
+    ...DefaultTheme,
     colors: {
-      ...baseNavTheme.colors,
+      ...DefaultTheme.colors,
       background: colors.bg,
       card: colors.bg,
       text: colors.text,

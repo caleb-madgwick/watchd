@@ -1,9 +1,13 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useDiary, useProfileStats, useUserActivity, useUserTitles } from './hooks';
 import { ActivityCard } from '@/components/activity/ActivityCard';
+import { Barcode } from '@/components/Barcode';
+import { Wordmark } from '@/components/Wordmark';
 import { ListCard } from '@/components/lists/ListCard';
 import { MediaRow } from '@/components/media/MediaRow';
 import { Avatar } from '@/components/primitives/Avatar';
@@ -20,7 +24,8 @@ import { useUserReviews, useToggleReviewLike } from '@/features/reviews/hooks';
 import { FollowButton } from '@/features/social/FollowButton';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
-import { contentWidth, radius, spacing } from '@/theme/tokens';
+import { contentWidth, fontFamily, radius, spacing } from '@/theme/tokens';
+import { prefersReducedMotion } from '@/utils/motion';
 import type { FeedItem } from '@/types/database';
 import { formatDate } from '@/utils/dates';
 import type { Profile } from '@/types/profile';
@@ -33,6 +38,152 @@ function StatCell({ value, label }: { value: string | number; label: string }) {
         {label}
       </Text>
     </View>
+  );
+}
+
+/** The profile header as a laminated Video Club membership card. */
+function MembershipCard({
+  profile,
+  isSelf,
+  pendingCount,
+}: {
+  profile: Profile;
+  isSelf: boolean;
+  pendingCount: number;
+}) {
+  const { scheme } = useTheme();
+  const [tilt] = useState(() => new Animated.Value(0));
+  const memberYear = new Date(profile.createdAt).getFullYear();
+  const dark = scheme === 'dark';
+  const inkOnCard = dark ? '#F4F1EA' : '#221A16';
+
+  const setHover = (to: number) => {
+    if (prefersReducedMotion()) return;
+    Animated.spring(tilt, { toValue: to, useNativeDriver: true, speed: 20, bounciness: 5 }).start();
+  };
+
+  return (
+    <Animated.View
+      onPointerEnter={() => setHover(1)}
+      onPointerLeave={() => setHover(0)}
+      style={[
+        styles.card,
+        {
+          transform: [
+            { rotateZ: tilt.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-0.7deg'] }) },
+            { translateY: tilt.interpolate({ inputRange: [0, 1], outputRange: [0, -3] }) },
+          ],
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={dark ? ['#1D232B', '#12151A'] : ['#FFFDF7', '#F1E8D6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Holographic laminate sheen */}
+      <LinearGradient
+        colors={['rgba(94,224,176,0.10)', 'rgba(255,255,255,0)', 'rgba(124,107,255,0.10)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0.8 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
+      <View style={styles.cardTop}>
+        <Wordmark size={13} />
+        <Text variant="micro" color="muted" style={styles.cardKicker}>
+          MEMBER CARD
+        </Text>
+      </View>
+
+      <View style={styles.cardIdentity}>
+        <Avatar url={profile.avatarUrl} name={profile.displayName} size={72} />
+        <View style={styles.cardNameBlock}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: fontFamily.display,
+              fontSize: 24,
+              lineHeight: 31,
+              color: inkOnCard,
+              letterSpacing: 0.5,
+            }}
+          >
+            {profile.displayName.toUpperCase()}
+          </Text>
+          <Text variant="subhead" color="muted" numberOfLines={1}>
+            @{profile.username}
+          </Text>
+          {profile.bio ? (
+            <Text variant="footnote" color="secondary" numberOfLines={2} style={styles.cardBio}>
+              {profile.bio}
+            </Text>
+          ) : null}
+        </View>
+      </View>
+
+      <View style={styles.followRow}>
+        <Link href={`/user/${profile.username}/followers`} asChild>
+          <Pressable accessibilityRole="link" hitSlop={6}>
+            <Text variant="subhead" color="secondary">
+              <Text variant="headline">{profile.followerCount}</Text> followers
+            </Text>
+          </Pressable>
+        </Link>
+        <Link href={`/user/${profile.username}/following`} asChild>
+          <Pressable accessibilityRole="link" hitSlop={6}>
+            <Text variant="subhead" color="secondary">
+              <Text variant="headline">{profile.followingCount}</Text> following
+            </Text>
+          </Pressable>
+        </Link>
+        {isSelf ? (
+          <Link href="/friends" asChild>
+            <Pressable accessibilityRole="link" hitSlop={6}>
+              <Text variant="subhead" color="secondary">
+                <Text variant="headline">{profile.friendCount}</Text> friends
+                {pendingCount > 0 ? (
+                  <Text variant="subhead" color="accent">
+                    {' '}
+                    · {pendingCount} new
+                  </Text>
+                ) : null}
+              </Text>
+            </Pressable>
+          </Link>
+        ) : (
+          <Text variant="subhead" color="secondary">
+            <Text variant="headline">{profile.friendCount}</Text> friends
+          </Text>
+        )}
+      </View>
+
+      <View style={styles.cardBottom}>
+        <Barcode
+          seed={profile.username}
+          height={22}
+          color={dark ? 'rgba(244,241,234,0.85)' : '#221A16'}
+          label={`MEMBER SINCE ${memberYear}`}
+        />
+        <View style={styles.cardActions}>
+          {isSelf ? (
+            <Button
+              title="Edit profile"
+              variant="outline"
+              size="sm"
+              onPress={() => router.push('/settings')}
+            />
+          ) : (
+            <>
+              <FollowButton targetUserId={profile.id} targetUsername={profile.username} />
+              <FriendButton targetUserId={profile.id} />
+            </>
+          )}
+        </View>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -107,70 +258,7 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
       contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xl }]}
     >
       <View style={styles.page}>
-        <View style={styles.header}>
-          <Avatar url={profile.avatarUrl} name={profile.displayName} size={84} />
-          <View style={styles.headerText}>
-            <Text variant="title1">{profile.displayName}</Text>
-            <Text variant="subhead" color="muted">
-              @{profile.username} · joined {formatDate(profile.createdAt)}
-            </Text>
-            {profile.bio ? (
-              <Text variant="callout" color="secondary" style={styles.bio}>
-                {profile.bio}
-              </Text>
-            ) : null}
-            <View style={styles.followRow}>
-              <Link href={`/user/${profile.username}/followers`} asChild>
-                <Pressable accessibilityRole="link" hitSlop={6}>
-                  <Text variant="subhead" color="secondary">
-                    <Text variant="headline">{profile.followerCount}</Text> followers
-                  </Text>
-                </Pressable>
-              </Link>
-              <Link href={`/user/${profile.username}/following`} asChild>
-                <Pressable accessibilityRole="link" hitSlop={6}>
-                  <Text variant="subhead" color="secondary">
-                    <Text variant="headline">{profile.followingCount}</Text> following
-                  </Text>
-                </Pressable>
-              </Link>
-              {isSelf ? (
-                <Link href="/friends" asChild>
-                  <Pressable accessibilityRole="link" hitSlop={6}>
-                    <Text variant="subhead" color="secondary">
-                      <Text variant="headline">{profile.friendCount}</Text> friends
-                      {pendingCount > 0 ? (
-                        <Text variant="subhead" color="accent">
-                          {' '}
-                          · {pendingCount} new
-                        </Text>
-                      ) : null}
-                    </Text>
-                  </Pressable>
-                </Link>
-              ) : (
-                <Text variant="subhead" color="secondary">
-                  <Text variant="headline">{profile.friendCount}</Text> friends
-                </Text>
-              )}
-            </View>
-          </View>
-          <View style={styles.headerAction}>
-            {isSelf ? (
-              <Button
-                title="Edit profile"
-                variant="outline"
-                size="sm"
-                onPress={() => router.push('/settings')}
-              />
-            ) : (
-              <>
-                <FollowButton targetUserId={profile.id} targetUsername={profile.username} />
-                <FriendButton targetUserId={profile.id} />
-              </>
-            )}
-          </View>
-        </View>
+        <MembershipCard profile={profile} isSelf={isSelf} pendingCount={pendingCount} />
 
         <View
           style={[styles.stats, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -431,8 +519,49 @@ const styles = StyleSheet.create({
   },
   followRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.lg,
     marginTop: spacing.sm,
+  },
+  card: {
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: spacing.md,
+    overflow: 'hidden',
+    boxShadow: '0px 12px 24px rgba(0,0,0,0.30)',
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardKicker: {
+    letterSpacing: 2,
+  },
+  cardIdentity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  cardNameBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  cardBio: {
+    marginTop: spacing.xs,
+  },
+  cardBottom: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    gap: spacing.lg,
+    marginTop: spacing.sm,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   headerAction: {
     marginTop: spacing.xs,

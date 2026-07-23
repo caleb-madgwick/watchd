@@ -1,15 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from './Text';
 import { useToastStore, type ToastItem } from '@/stores/toastStore';
 import { useTheme } from '@/theme/ThemeContext';
-import { radius, spacing } from '@/theme/tokens';
+import { fontFamily, spacing } from '@/theme/tokens';
+import { prefersReducedMotion } from '@/utils/motion';
+
+/** Receipt ink + paper — deliberately the same in both themes. */
+const PAPER = '#FBF8F0';
+const INK = '#221A16';
 
 function ToastCard({ item }: { item: ToastItem }) {
   const { colors } = useTheme();
   const dismiss = useToastStore((s) => s.dismiss);
+  const [entrance] = useState(() => new Animated.Value(prefersReducedMotion() ? 1 : 0));
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return;
+    Animated.spring(entrance, { toValue: 1, useNativeDriver: true, speed: 16, bounciness: 6 }).start();
+  }, [entrance]);
 
   const icon =
     item.type === 'success' ? 'checkmark-circle' : item.type === 'error' ? 'alert-circle' : 'information-circle';
@@ -17,17 +29,31 @@ function ToastCard({ item }: { item: ToastItem }) {
     item.type === 'success' ? colors.success : item.type === 'error' ? colors.danger : colors.info;
 
   return (
-    <Pressable
-      accessibilityRole="alert"
-      accessibilityLiveRegion="polite"
-      onPress={() => dismiss(item.id)}
-      style={[styles.card, { backgroundColor: colors.surfaceHigh, borderColor: colors.border }]}
+    <Animated.View
+      style={{
+        opacity: entrance,
+        transform: [
+          { translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) },
+        ],
+      }}
     >
-      <Ionicons name={icon} size={18} color={iconColor} />
-      <Text variant="subhead" style={styles.message} numberOfLines={2}>
-        {item.message}
-      </Text>
-    </Pressable>
+      <Pressable
+        accessibilityRole="alert"
+        accessibilityLiveRegion="polite"
+        onPress={() => dismiss(item.id)}
+        style={styles.receipt}
+      >
+        <Text style={styles.kicker} numberOfLines={1}>
+          ····· VIDEO CLUB ·····
+        </Text>
+        <View style={styles.body}>
+          <Ionicons name={icon} size={17} color={iconColor} />
+          <Text variant="subhead" style={styles.message} numberOfLines={2}>
+            {item.message}
+          </Text>
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -56,23 +82,35 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     zIndex: 1000,
   },
-  card: {
+  receipt: {
+    backgroundColor: PAPER,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+    maxWidth: 420,
+    marginHorizontal: spacing.lg,
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: 'rgba(34,26,22,0.35)',
+    boxShadow: '0px 8px 18px rgba(0,0,0,0.30)',
+  },
+  kicker: {
+    fontFamily: fontFamily.bodySemiBold,
+    fontSize: 9,
+    lineHeight: 13,
+    letterSpacing: 2,
+    color: 'rgba(34,26,22,0.55)',
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  body: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: radius.full,
-    borderWidth: StyleSheet.hairlineWidth,
-    maxWidth: 420,
-    marginHorizontal: spacing.lg,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
   },
   message: {
     flexShrink: 1,
+    color: INK,
   },
 });

@@ -17,7 +17,7 @@ export default function Root({ children }: PropsWithChildren) {
           name="description"
           content="Video Club is a social tracker for movies and TV. Log what you watch, rate and review, keep a watchlist, and follow friends."
         />
-        <meta name="theme-color" content="#0B0D10" />
+        <meta name="theme-color" content="#FAF3E8" />
         <ScrollViewStyleReset />
       </head>
       <body>{children}</body>

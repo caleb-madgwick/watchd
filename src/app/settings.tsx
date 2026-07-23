@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Avatar } from '@/components/primitives/Avatar';
+import { Barcode } from '@/components/Barcode';
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { Modal } from '@/components/primitives/Modal';
-import { SegmentedControl } from '@/components/primitives/SegmentedControl';
 import { Text } from '@/components/primitives/Text';
 import { TextInput } from '@/components/primitives/TextInput';
 import { FilterChip } from '@/components/primitives/FilterChip';
@@ -19,7 +19,7 @@ import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { toast } from '@/stores/toastStore';
-import { useTheme, useThemePreference, type ThemePreference } from '@/theme/ThemeContext';
+import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing, contentWidth } from '@/theme/tokens';
 import type { NotificationPrefs } from '@/types/database';
 
@@ -46,7 +46,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function SettingsScreen() {
   const { session, profile, signOut, refreshProfile } = useAuth();
   const { colors } = useTheme();
-  const { preference, setPreference } = useThemePreference();
 
   const [displayName, setDisplayName] = useState(
     profile?.displayName === profile?.username ? '' : (profile?.displayName ?? ''),
@@ -60,7 +59,6 @@ export default function SettingsScreen() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [legalOpen, setLegalOpen] = useState<null | 'privacy' | 'terms'>(null);
 
   if (config.demoMode || !session || !profile) {
     return (
@@ -198,18 +196,6 @@ export default function SettingsScreen() {
 
         <Button title="Save changes" fullWidth loading={saving} onPress={saveProfile} />
 
-        <Section title="Appearance">
-          <SegmentedControl<ThemePreference>
-            options={[
-              { value: 'dark', label: 'Dark' },
-              { value: 'light', label: 'Light' },
-              { value: 'system', label: 'System' },
-            ]}
-            value={preference}
-            onChange={setPreference}
-          />
-        </Section>
-
         <Section title="Notifications">
           {NOTIFICATION_OPTIONS.map((option) => (
             <View key={option.key} style={styles.switchRow}>
@@ -236,14 +222,14 @@ export default function SettingsScreen() {
         <Section title="Privacy & legal">
           <Pressable
             accessibilityRole="button"
-            onPress={() => setLegalOpen('privacy')}
+            onPress={() => router.push('/privacy')}
             style={styles.linkRow}
           >
             <Text variant="callout">Privacy policy</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            onPress={() => setLegalOpen('terms')}
+            onPress={() => router.push('/terms')}
             style={styles.linkRow}
           >
             <Text variant="callout">Terms of use</Text>
@@ -270,6 +256,15 @@ export default function SettingsScreen() {
             onPress={() => setConfirmDelete(true)}
           />
         </Section>
+
+        <View style={styles.memberFooter}>
+          <Barcode
+            seed={profile.username}
+            height={20}
+            color={colors.textMuted}
+            label="VIDEO CLUB · MEMBER SYSTEM"
+          />
+        </View>
       </ScrollView>
 
       <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete your account?">
@@ -287,18 +282,6 @@ export default function SettingsScreen() {
           />
           <Button title="Cancel" variant="ghost" fullWidth onPress={() => setConfirmDelete(false)} />
         </View>
-      </Modal>
-
-      <Modal
-        visible={legalOpen !== null}
-        onClose={() => setLegalOpen(null)}
-        title={legalOpen === 'privacy' ? 'Privacy policy' : 'Terms of use'}
-      >
-        <Text variant="callout" color="secondary">
-          {legalOpen === 'privacy'
-            ? 'Placeholder privacy policy. Video Club stores the account details you provide (email, username, profile), your tracking data (statuses, ratings, reviews, lists, follows) and nothing else. Metadata about movies and shows comes from TMDB. Replace this text with your full policy before public release.'
-            : 'Placeholder terms of use. Video Club is provided as-is during development. Be kind in reviews, mark your spoilers, and do not post content you do not have the right to share. Replace this text with your full terms before public release.'}
-        </Text>
       </Modal>
     </ProfileSubpageShell>
   );
@@ -353,5 +336,9 @@ const styles = StyleSheet.create({
   },
   modalBody: {
     gap: spacing.md,
+  },
+  memberFooter: {
+    alignItems: 'center',
+    paddingTop: spacing.lg,
   },
 });

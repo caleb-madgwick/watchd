@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { FlatList, StyleSheet, View, type ListRenderItemInfo } from 'react-native';
 
+import { SettleIn } from '@/components/primitives/SettleIn';
 import { spacing } from '@/theme/tokens';
 
 export interface ResponsiveGridProps<T> {
@@ -50,7 +51,9 @@ export function ResponsiveGrid<T>({
             marginBottom: gap,
           }}
         >
-          {renderItem(item, itemWidth)}
+          <SettleIn index={index % (numColumns * 2)} maxStagger={numColumns * 2}>
+            {renderItem(item, itemWidth)}
+          </SettleIn>
         </View>
       );
     },

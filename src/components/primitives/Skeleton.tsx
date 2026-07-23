@@ -42,6 +42,8 @@ export function Skeleton({ width = '100%', height = 16, radius = radiusTokens.xs
     <Animated.View
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
+      // Tape-static texture on web via [data-static] in global.css.
+      {...({ dataSet: { static: 'true' } } as Record<string, unknown>)}
       style={[{ width, height, borderRadius: radius, backgroundColor: colors.skeletonBase, opacity }, style]}
     />
   );

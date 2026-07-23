@@ -6,8 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "videoclub",
-    "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0B0D10",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FAF3E8",
     "ios": {
       "icon": "./assets/expo.icon",
       "bundleIdentifier": "app.videoclub.mobile",
@@ -32,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0B0D10",
+          "backgroundColor": "#FAF3E8",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

@@ -1,6 +1,6 @@
 /* Web-only global styles (ignored on native). */
 :root {
-  color-scheme: dark light;
+  color-scheme: light;
 }
 
 html,
@@ -11,7 +11,7 @@ body,
 }
 
 body {
-  background-color: #0b0d10;
+  background-color: #faf3e8;
 }
 
 /* Keyboard focus visibility on web */
@@ -38,6 +38,49 @@ textarea:focus-visible {
     rgba(0, 0, 0, 0) 4px
   );
   pointer-events: none;
+}
+
+/* Tape-static shimmer on loading skeletons (web only) */
+[data-static] {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    rgba(0, 0, 0, 0.05) 1px,
+    rgba(0, 0, 0, 0.05) 2px,
+    transparent 2px,
+    transparent 3px
+  );
+  animation: vhs-jitter 0.35s steps(3) infinite;
+}
+
+@keyframes vhs-jitter {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 0 2px;
+  }
+  100% {
+    background-position: 0 -2px;
+  }
+}
+
+/* Faint film grain over everything (self-generated SVG noise) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483647;
+  opacity: 0.032;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-static] {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

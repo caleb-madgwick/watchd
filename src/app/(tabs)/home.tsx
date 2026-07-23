@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import { Text } from '@/components/primitives/Text';
 import { RetroStripes } from '@/components/RetroStripes';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
 import { Wordmark } from '@/components/Wordmark';
+import { MarqueeHero } from '@/features/discovery/MarqueeHero';
 import { config } from '@/constants/config';
 import {
   useContinueWatching,
@@ -80,6 +81,8 @@ export default function HomeScreen() {
 
   const firstName = profile?.displayName.split(' ')[0];
   const everythingFailed = trendingMovies.isError && trendingTv.isError;
+  const featured =
+    trendingMovies.data?.find((t) => t.backdropUrl) ?? trendingTv.data?.find((t) => t.backdropUrl);
 
   return (
     <Screen>
@@ -120,6 +123,8 @@ export default function HomeScreen() {
             />
           ) : (
             <View style={styles.sections}>
+              {featured ? <MarqueeHero title={featured} /> : null}
+
               {continueWatching.data && continueWatching.data.length > 0 ? (
                 <View style={styles.section}>
                   <Text variant="title3" style={styles.sectionHeading}>
@@ -197,8 +202,8 @@ export default function HomeScreen() {
                     <EmptyState
                       compact
                       icon="people-outline"
-                      title="Your feed is quiet"
-                      message="Follow other members to see their reviews and activity here."
+                      title="This shelf is empty"
+                      message="Be kind — rewind, and follow a few members to fill it with their reviews."
                       actionTitle="Find people"
                       onAction={() => router.push('/search')}
                     />
@@ -227,9 +232,12 @@ export default function HomeScreen() {
           )}
 
           <View style={styles.footerLinks}>
-            <Link href="/watchlist" asChild>
-              <Button title="Open watchlist" variant="outline" icon="bookmark-outline" />
-            </Link>
+            <Button
+              title="Open watchlist"
+              variant="outline"
+              icon="bookmark-outline"
+              onPress={() => router.push('/watchlist')}
+            />
           </View>
         </View>
       </ScrollView>
