@@ -56,13 +56,47 @@ token>` — dev only; never ship a shared TMDB credential in a client build.
 
 ## 3. Web deployment
 
+### Vercel (recommended for test links)
+
+One-time setup, then a single command per deploy:
+
+```bash
+npx vercel login              # one-time, opens browser
+npm run deploy:web            # export with your local .env baked in → deploy
+```
+
+The first deploy asks to create a Vercel project (accept defaults). It prints
+a production URL like `https://watchd-xxxx.vercel.app` — share that with
+testers. `vercel.json` handles clean URLs and the SPA fallback so deep links
+(`/movie/27205`, `/user/name`) resolve without breaking asset requests.
+
+`deploy:web` builds locally, so the `EXPO_PUBLIC_*` values in your local
+`.env` are baked into the bundle (they're public-safe by design — anon key +
+URL only; security lives in RLS).
+
+**After the first deploy**, add the Vercel URL in Supabase → Authentication →
+URL Configuration:
+
+- Site URL: `https://<your-app>.vercel.app`
+- Additional redirect URLs: `https://<your-app>.vercel.app/reset-password`
+
+so password-reset emails (and confirmation links, if re-enabled) land on the
+deployed app instead of localhost.
+
+**Alternative — Git integration:** push the repo to GitHub, import it in the
+Vercel dashboard (it reads `vercel.json` for build settings), and set
+`EXPO_PUBLIC_SUPABASE_URL` + `EXPO_PUBLIC_SUPABASE_ANON_KEY` as project
+environment variables. Every push then auto-deploys with preview URLs.
+
+### Any other static host
+
 ```bash
 npx expo export -p web        # outputs static site to ./dist
 ```
 
-Deploy `dist/` to any static host (Netlify, Vercel, Cloudflare Pages).
-Configure SPA fallback to `/index.html` for deep links, e.g. Netlify
-`_redirects`: `/*  /index.html  200`. Set the env vars above at build time.
+Deploy `dist/` to Netlify/Cloudflare Pages with an SPA fallback to
+`/index.html` for extensionless paths (Netlify `_redirects`:
+`/*  /index.html  200`).
 
 ## 4. iOS / Android (EAS)
 

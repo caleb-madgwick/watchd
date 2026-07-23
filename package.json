@@ -21,6 +21,7 @@
     "expo-image-picker": "~57.0.6",
     "expo-linear-gradient": "~57.0.1",
     "expo-linking": "~57.0.4",
+    "expo-localization": "~57.0.1",
     "expo-router": "~57.0.8",
     "expo-secure-store": "~57.0.1",
     "expo-splash-screen": "~57.0.5",
@@ -65,7 +66,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:web": "expo export -p web",
+    "deploy:web": "expo export -p web && cp vercel.json dist/vercel.json && cd dist && npx vercel deploy --prod"
   },
   "private": true
 }
