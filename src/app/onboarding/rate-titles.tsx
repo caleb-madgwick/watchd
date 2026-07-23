@@ -5,12 +5,16 @@ import { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { ErrorState } from '@/components/primitives/ErrorState';
+import { EmptyState } from '@/components/primitives/EmptyState';
 import { RatingInput } from '@/components/primitives/RatingStars';
+import { SearchInput } from '@/components/primitives/SearchInput';
 import { CardListSkeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
 import { OnboardingShell } from '@/features/onboarding/OnboardingShell';
 import { updateProfile } from '@/features/profile/api';
+import { useTitleSearch } from '@/features/search/hooks';
 import { rateInitialTitle } from '@/features/tracking/api';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { track } from '@/lib/analytics';
 import { tmdb } from '@/lib/tmdb/client';
 import { useAuth } from '@/providers/AuthProvider';
@@ -19,15 +23,58 @@ import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
 import type { TitleSummary } from '@/types/domain';
 
-const REQUIRED_RATINGS = 5;
+function titleKey(title: TitleSummary) {
+  return `${title.mediaType}-${title.tmdbId}`;
+}
+
+function RateRow({
+  title,
+  rating,
+  onRate,
+}: {
+  title: TitleSummary;
+  rating: number;
+  onRate: (title: TitleSummary, value: number) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      {title.posterUrl ? (
+        <Image
+          source={{ uri: title.posterUrl }}
+          style={styles.poster}
+          contentFit="cover"
+          accessibilityLabel={`${title.title} poster`}
+        />
+      ) : (
+        <View style={[styles.poster, { backgroundColor: colors.surfaceRaised }]} />
+      )}
+      <View style={styles.rowBody}>
+        <Text variant="headline" numberOfLines={1}>
+          {title.title}
+        </Text>
+        <Text variant="caption" color="muted">
+          {[title.releaseYear, title.mediaType === 'movie' ? 'Movie' : 'TV']
+            .filter(Boolean)
+            .join(' · ')}
+        </Text>
+        <View style={styles.ratingWrap}>
+          <RatingInput value={rating} onChange={(value) => onRate(title, value)} size={26} />
+        </View>
+      </View>
+    </View>
+  );
+}
 
 export default function RateTitlesStep() {
   const { session, refreshProfile } = useAuth();
-  const { colors } = useTheme();
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [finishing, setFinishing] = useState(false);
+  const [input, setInput] = useState('');
+  const query = useDebouncedValue(input, 350);
+  const searching = query.trim().length >= 2;
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const popular = useQuery({
     queryKey: ['onboarding', 'rateTitles'],
     queryFn: async () => {
       const [movies, tv] = await Promise.all([tmdb.popularMovies(), tmdb.popularTv()]);
@@ -43,10 +90,18 @@ export default function RateTitlesStep() {
     staleTime: 30 * 60_000,
   });
 
+  const search = useTitleSearch('all', searching ? query : '');
+  const searchResults = useMemo(
+    () => search.data?.pages.flatMap((page) => page.results) ?? [],
+    [search.data],
+  );
+
+  const titles = searching ? searchResults : (popular.data ?? []);
+  const activeQuery = searching ? search : popular;
   const ratedCount = useMemo(() => Object.values(ratings).filter((r) => r > 0).length, [ratings]);
 
   const onRate = (title: TitleSummary, value: number) => {
-    const key = `${title.mediaType}-${title.tmdbId}`;
+    const key = titleKey(title);
     setRatings((current) => ({ ...current, [key]: value }));
     if (session && value > 0) {
       rateInitialTitle(session.user.id, title, value).catch(() => {
@@ -74,67 +129,57 @@ export default function RateTitlesStep() {
   return (
     <OnboardingShell
       step={4}
-      title="Rate a few titles"
-      subtitle={`Rate at least ${REQUIRED_RATINGS} things you've seen — it makes your home feed instantly yours.`}
+      title="Rate what you've seen"
+      subtitle="Search anything you've watched, or pick from what's popular. Every rating sharpens your home feed — finish whenever you like."
       actionTitle={
-        ratedCount >= REQUIRED_RATINGS
-          ? 'Finish setup'
-          : `Rate ${REQUIRED_RATINGS - ratedCount} more to finish`
+        ratedCount > 0
+          ? `Finish with ${ratedCount} rating${ratedCount === 1 ? '' : 's'}`
+          : 'Finish setup'
       }
       onAction={completeOnboarding}
       actionLoading={finishing}
-      actionDisabled={ratedCount < REQUIRED_RATINGS}
-      onSkip={completeOnboarding}
     >
-      {isLoading ? (
+      <View style={styles.searchWrap}>
+        <SearchInput
+          placeholder="Search movies and shows you've watched…"
+          value={input}
+          onChangeText={setInput}
+          onClear={() => setInput('')}
+        />
+      </View>
+
+      {activeQuery.isLoading ? (
         <CardListSkeleton count={5} />
-      ) : isError || !data ? (
+      ) : activeQuery.isError ? (
         <ErrorState
           compact
           title="Couldn’t load titles"
           message="Check your connection — or your TMDB configuration — and try again."
-          onRetry={() => refetch()}
+          onRetry={() => activeQuery.refetch()}
+        />
+      ) : titles.length === 0 ? (
+        <EmptyState
+          compact
+          icon="telescope-outline"
+          title={searching ? `No results for “${query.trim()}”` : 'Nothing to show'}
+          message={searching ? 'Try a different spelling or a broader search.' : undefined}
         />
       ) : (
         <FlatList
-          data={data}
-          keyExtractor={(item) => `${item.mediaType}-${item.tmdbId}`}
+          data={titles}
+          keyExtractor={titleKey}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
-          renderItem={({ item }) => {
-            const key = `${item.mediaType}-${item.tmdbId}`;
-            return (
-              <View style={[styles.row, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {item.posterUrl ? (
-                  <Image
-                    source={{ uri: item.posterUrl }}
-                    style={styles.poster}
-                    contentFit="cover"
-                    accessibilityLabel={`${item.title} poster`}
-                  />
-                ) : (
-                  <View style={[styles.poster, { backgroundColor: colors.surfaceRaised }]} />
-                )}
-                <View style={styles.rowBody}>
-                  <Text variant="headline" numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text variant="caption" color="muted">
-                    {[item.releaseYear, item.mediaType === 'movie' ? 'Movie' : 'TV']
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                  <View style={styles.ratingWrap}>
-                    <RatingInput
-                      value={ratings[key] ?? 0}
-                      onChange={(value) => onRate(item, value)}
-                      size={26}
-                    />
-                  </View>
-                </View>
-              </View>
-            );
+          keyboardShouldPersistTaps="handled"
+          onEndReached={() => {
+            if (searching && search.hasNextPage && !search.isFetchingNextPage) {
+              search.fetchNextPage();
+            }
           }}
+          onEndReachedThreshold={0.4}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          renderItem={({ item }) => (
+            <RateRow title={item} rating={ratings[titleKey(item)] ?? 0} onRate={onRate} />
+          )}
         />
       )}
     </OnboardingShell>
@@ -142,6 +187,9 @@ export default function RateTitlesStep() {
 }
 
 const styles = StyleSheet.create({
+  searchWrap: {
+    marginBottom: spacing.lg,
+  },
   row: {
     flexDirection: 'row',
     borderRadius: radius.md,

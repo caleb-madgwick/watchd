@@ -11,7 +11,6 @@ import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
 import { Text } from '@/components/primitives/Text';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
-import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { Wordmark } from '@/components/Wordmark';
 import { config } from '@/constants/config';
 import {
@@ -222,7 +221,6 @@ export default function HomeScreen() {
               <Button title="Open watchlist" variant="outline" icon="bookmark-outline" />
             </Link>
           </View>
-          <TmdbAttribution compact />
         </View>
       </ScrollView>
     </Screen>

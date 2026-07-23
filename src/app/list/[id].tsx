@@ -88,7 +88,10 @@ export default function ListDetailScreen() {
                     variant="secondary"
                     size="sm"
                     icon="create-outline"
-                    onPress={() => router.push(`/list/edit/${list.data!.id}`)}
+                    onPress={() => {
+                      const data = list.data;
+                      if (data) router.push(`/list/edit/${data.id}`);
+                    }}
                   />
                   <Button
                     title="Delete list"
@@ -157,22 +160,26 @@ export default function ListDetailScreen() {
         />
       )}
 
-      <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete list?">
-        <View style={styles.modalBody}>
-          <Text variant="callout" color="secondary">
-            “{list.data?.name}” and its {list.data?.itemCount ?? 0} entries will be permanently
-            removed.
-          </Text>
-          <Button
-            title="Delete list"
-            variant="danger"
-            fullWidth
-            loading={deleteList.isPending}
-            onPress={() => deleteList.mutate(list.data!.id)}
-          />
-          <Button title="Keep it" variant="ghost" fullWidth onPress={() => setConfirmDelete(false)} />
-        </View>
-      </Modal>
+      {list.data ? (
+        <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete list?">
+          <View style={styles.modalBody}>
+            <Text variant="callout" color="secondary">
+              “{list.data.name}” and its {list.data.itemCount} entries will be permanently removed.
+            </Text>
+            <Button
+              title="Delete list"
+              variant="danger"
+              fullWidth
+              loading={deleteList.isPending}
+              onPress={() => {
+                const data = list.data;
+                if (data) deleteList.mutate(data.id);
+              }}
+            />
+            <Button title="Keep it" variant="ghost" fullWidth onPress={() => setConfirmDelete(false)} />
+          </View>
+        </Modal>
+      ) : null}
     </ProfileSubpageShell>
   );
 }

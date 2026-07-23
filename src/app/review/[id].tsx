@@ -87,8 +87,10 @@ export default function ReviewDetailScreen() {
               likedByMe={review.data.likedByMe}
               onToggleLike={
                 session
-                  ? () =>
-                      toggleLike.mutate({ reviewId: review.data!.id, like: !review.data!.likedByMe })
+                  ? () => {
+                      const data = review.data;
+                      if (data) toggleLike.mutate({ reviewId: data.id, like: !data.likedByMe });
+                    }
                   : undefined
               }
               numberOfLines={0}
@@ -100,7 +102,10 @@ export default function ReviewDetailScreen() {
                   title="Edit review"
                   variant="secondary"
                   icon="create-outline"
-                  onPress={() => router.push(`/review/edit/${review.data!.id}`)}
+                  onPress={() => {
+                    const data = review.data;
+                    if (data) router.push(`/review/edit/${data.id}`);
+                  }}
                 />
                 <Button
                   title="Delete"
@@ -123,28 +128,32 @@ export default function ReviewDetailScreen() {
         )}
       </View>
 
-      <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete review?">
-        <View style={styles.modalBody}>
-          <Text variant="callout" color="secondary">
-            This permanently removes your review and its likes.
-          </Text>
-          <Button
-            title="Delete review"
-            variant="danger"
-            fullWidth
-            loading={deleteReview.isPending}
-            onPress={() =>
-              deleteReview.mutate(review.data!.id, {
-                onSuccess: () => {
-                  setConfirmDelete(false);
-                  router.back();
-                },
-              })
-            }
-          />
-          <Button title="Keep it" variant="ghost" fullWidth onPress={() => setConfirmDelete(false)} />
-        </View>
-      </Modal>
+      {review.data ? (
+        <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete review?">
+          <View style={styles.modalBody}>
+            <Text variant="callout" color="secondary">
+              This permanently removes your review and its likes.
+            </Text>
+            <Button
+              title="Delete review"
+              variant="danger"
+              fullWidth
+              loading={deleteReview.isPending}
+              onPress={() => {
+                const data = review.data;
+                if (!data) return;
+                deleteReview.mutate(data.id, {
+                  onSuccess: () => {
+                    setConfirmDelete(false);
+                    router.back();
+                  },
+                });
+              }}
+            />
+            <Button title="Keep it" variant="ghost" fullWidth onPress={() => setConfirmDelete(false)} />
+          </View>
+        </Modal>
+      ) : null}
 
       <Modal visible={reporting} onClose={() => setReporting(false)} title="Report this review">
         <View style={styles.modalBody}>

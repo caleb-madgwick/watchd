@@ -3,7 +3,6 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Screen } from '@/components/primitives/Screen';
-import { TmdbAttribution } from '@/components/TmdbAttribution';
 import { Wordmark } from '@/components/Wordmark';
 import { config } from '@/constants/config';
 import { useAuth } from '@/providers/AuthProvider';
@@ -37,7 +36,6 @@ export default function AuthLayout() {
             </View>
             <Slot />
           </View>
-          <TmdbAttribution compact />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
