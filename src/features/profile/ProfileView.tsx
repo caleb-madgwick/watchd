@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDiary, useProfileStats, useUserActivity, useUserTitles } from './hooks';
 import { ActivityCard } from '@/components/activity/ActivityCard';
 import { Barcode } from '@/components/Barcode';
+import { RetroStripes } from '@/components/RetroStripes';
 import { Wordmark } from '@/components/Wordmark';
 import { ListCard } from '@/components/lists/ListCard';
 import { MediaRow } from '@/components/media/MediaRow';
@@ -17,10 +19,12 @@ import { EmptyState } from '@/components/primitives/EmptyState';
 import { RatingStars } from '@/components/primitives/RatingStars';
 import { Text } from '@/components/primitives/Text';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
+import { useUserBadges, useWatchChallenge } from '@/features/challenges/hooks';
 import { FriendButton } from '@/features/friends/FriendButton';
 import { usePendingFriendRequests } from '@/features/friends/hooks';
 import { useUserLists } from '@/features/lists/hooks';
 import { useUserReviews, useToggleReviewLike } from '@/features/reviews/hooks';
+import { BlockButton } from '@/features/social/BlockButton';
 import { FollowButton } from '@/features/social/FollowButton';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
@@ -39,6 +43,16 @@ function StatCell({ value, label }: { value: string | number; label: string }) {
       </Text>
     </View>
   );
+}
+
+/** Deterministic faux card number — the embossed digits on the member card. */
+function memberNumber(username: string): string {
+  let h = 7;
+  for (let i = 0; i < username.length; i += 1) {
+    h = (h * 31 + username.charCodeAt(i)) >>> 0;
+  }
+  const digits = `${h}`.padStart(12, '0').slice(-12);
+  return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8, 12)}`;
 }
 
 /** The profile header as a laminated Video Club membership card. */
@@ -91,12 +105,23 @@ function MembershipCard({
         pointerEvents="none"
       />
 
+      {/* Oversized ghost disc, like the printed watermark on old rental cards */}
+      <View style={styles.cardWatermark} pointerEvents="none">
+        <Ionicons
+          name="disc-outline"
+          size={190}
+          color={dark ? 'rgba(94,224,176,0.08)' : 'rgba(31,122,90,0.10)'}
+        />
+      </View>
+
       <View style={styles.cardTop}>
-        <Wordmark size={13} />
+        <Wordmark size={17} />
         <Text variant="micro" color="muted" style={styles.cardKicker}>
           MEMBER CARD
         </Text>
       </View>
+
+      <RetroStripes width={150} height={5} />
 
       <View style={styles.cardIdentity}>
         <Avatar url={profile.avatarUrl} name={profile.displayName} size={72} />
@@ -105,10 +130,10 @@ function MembershipCard({
             numberOfLines={1}
             style={{
               fontFamily: fontFamily.display,
-              fontSize: 24,
-              lineHeight: 31,
+              fontSize: 30,
+              lineHeight: 38,
               color: inkOnCard,
-              letterSpacing: 0.5,
+              letterSpacing: 1,
             }}
           >
             {profile.displayName.toUpperCase()}
@@ -160,6 +185,20 @@ function MembershipCard({
         )}
       </View>
 
+      <Text
+        accessibilityElementsHidden
+        style={{
+          fontFamily: fontFamily.bodySemiBold,
+          fontSize: 16,
+          lineHeight: 22,
+          letterSpacing: 4,
+          color: inkOnCard,
+          opacity: 0.75,
+        }}
+      >
+        {memberNumber(profile.username)}
+      </Text>
+
       <View style={styles.cardBottom}>
         <Barcode
           seed={profile.username}
@@ -179,6 +218,7 @@ function MembershipCard({
             <>
               <FollowButton targetUserId={profile.id} targetUsername={profile.username} />
               <FriendButton targetUserId={profile.id} />
+              <BlockButton targetUserId={profile.id} />
             </>
           )}
         </View>
@@ -224,7 +264,10 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
 
+  const challengeYear = new Date().getFullYear();
   const stats = useProfileStats(profile.id);
+  const challenge = useWatchChallenge(profile.id, challengeYear);
+  const badges = useUserBadges(profile.id);
   const favourites = useUserTitles(profile.id, { favouritesOnly: true, limit: 12 });
   const watchedMovies = useUserTitles(profile.id, {
     mediaType: 'movie',
@@ -252,6 +295,36 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
     (reviews.data?.length ?? 0) > 0 ||
     (lists.data?.length ?? 0) > 0;
 
+  const challengeGoal = challenge.data?.goal ?? null;
+  const challengePct = challengeGoal
+    ? Math.min(100, Math.round(((challenge.data?.watched ?? 0) / challengeGoal) * 100))
+    : 0;
+  const challengeInner = (
+    <>
+      <View style={styles.challengeHead}>
+        <Ionicons name="flag" size={15} color={colors.accent} />
+        <Text variant="subhead">{challengeYear} watch challenge</Text>
+      </View>
+      {challengeGoal ? (
+        <>
+          <Text variant="caption" color="muted">
+            {challenge.data?.watched ?? 0} of {challengeGoal}
+            {challenge.data?.completed ? ' · complete 🎉' : ' watched'}
+          </Text>
+          <View style={[styles.challengeTrack, { backgroundColor: colors.surfaceRaised }]}>
+            <View
+              style={[styles.challengeFill, { width: `${challengePct}%`, backgroundColor: colors.accent }]}
+            />
+          </View>
+        </>
+      ) : (
+        <Text variant="caption" color="muted">
+          Tap to set a goal for {challengeYear}
+        </Text>
+      )}
+    </>
+  );
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -260,8 +333,16 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
       <View style={styles.page}>
         <MembershipCard profile={profile} isSelf={isSelf} pendingCount={pendingCount} />
 
-        <View
-          style={[styles.stats, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        <LinkPressable
+          href={`/user/${profile.username}/stats`}
+          accessibilityLabel={`View ${isSelf ? 'your' : `@${profile.username}'s`} stats`}
+          style={({ pressed, hovered }) => [
+            styles.stats,
+            {
+              backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
         >
           <StatCell value={stats.data?.watchedMovies ?? '–'} label="movies" />
           <StatCell value={stats.data?.watchedShows ?? '–'} label="shows" />
@@ -283,7 +364,43 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
             )}
           </View>
           <StatCell value={stats.data?.reviews ?? '–'} label="reviews" />
-        </View>
+        </LinkPressable>
+
+        {isSelf ? (
+          <LinkPressable
+            href="/challenge"
+            accessibilityLabel="Watch challenge"
+            style={({ pressed, hovered }) => [
+              styles.challengeCard,
+              {
+                backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surface,
+                borderColor: colors.border,
+              },
+            ]}
+          >
+            {challengeInner}
+          </LinkPressable>
+        ) : challengeGoal ? (
+          <View style={[styles.challengeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {challengeInner}
+          </View>
+        ) : null}
+
+        {badges.data && badges.data.length > 0 ? (
+          <View style={styles.badgesRow}>
+            {badges.data.slice(0, 10).map((b) => (
+              <View
+                key={b.code}
+                style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Ionicons name={b.icon as keyof typeof Ionicons.glyphMap} size={15} color={colors.accent} />
+                <Text variant="micro" numberOfLines={1}>
+                  {b.name}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
         {isSelf ? (
           <View style={styles.quickLinks}>
@@ -324,6 +441,7 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                 heading="Favourites"
                 titles={favourites.data.map((r) => r.title)}
                 posterWidth={104}
+                seeAllHref={isSelf ? '/favourites/edit' : undefined}
               />
             ) : null}
 
@@ -536,6 +654,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  cardWatermark: {
+    position: 'absolute',
+    right: -34,
+    top: 24,
+  },
   cardKicker: {
     letterSpacing: 2,
   },
@@ -575,6 +698,46 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     paddingVertical: spacing.md,
+  },
+  challengeCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    gap: spacing.xs,
+  },
+  challengeHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  challengeTrack: {
+    height: 10,
+    borderRadius: radius.full,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  challengeFill: {
+    height: '100%',
+    borderRadius: radius.full,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    paddingVertical: 5,
+    paddingHorizontal: spacing.sm,
   },
   quickLinks: {
     marginHorizontal: spacing.lg,

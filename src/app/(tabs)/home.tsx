@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,6 +25,7 @@ import {
   useTrending,
 } from '@/features/discovery/hooks';
 import { useWatchlist } from '@/features/tracking/queries';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { supabase } from '@/lib/supabase/client';
 import { posterUrl } from '@/lib/tmdb/images';
 import { useAuth } from '@/providers/AuthProvider';
@@ -67,9 +69,22 @@ function useCommunityPopular() {
   });
 }
 
+/** Counter-clerk greetings — one is picked per visit. */
+const GREETINGS: ((name?: string) => string)[] = [
+  (name) => (name ? `What are we watching tonight, ${name}?` : 'What are we watching tonight?'),
+  (name) => (name ? `Back for another one, ${name}?` : 'Back for another one?'),
+  (name) =>
+    name ? `The new releases wall is stocked, ${name}.` : 'The new releases wall is stocked.',
+  (name) => (name ? `Double feature kind of night, ${name}?` : 'Double feature kind of night?'),
+  (name) => (name ? `Pick something good, ${name}.` : 'Pick something good.'),
+  (name) => (name ? `Be kind, rewind, ${name}.` : 'Be kind, rewind.'),
+];
+
 export default function HomeScreen() {
   const { profile } = useAuth();
   const insets = useSafeAreaInsets();
+  const { isWide } = useBreakpoint();
+  const [greet] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
 
   const trendingMovies = useTrending('movie');
   const trendingTv = useTrending('tv');
@@ -95,12 +110,21 @@ export default function HomeScreen() {
         <View style={styles.page}>
           <View style={styles.header}>
             <View>
-              <Wordmark size={24} />
-              <View style={styles.headerStripes}>
-                <RetroStripes width={88} height={4} />
-              </View>
-              <Text variant="callout" color="secondary" style={styles.greeting}>
-                {firstName ? `What are we watching tonight, ${firstName}?` : 'What are we watching tonight?'}
+              {/* The sidebar already carries the wordmark on wide screens. */}
+              {!isWide ? (
+                <>
+                  <Wordmark size={30} />
+                  <View style={styles.headerStripes}>
+                    <RetroStripes width={88} height={4} />
+                  </View>
+                </>
+              ) : null}
+              <Text
+                variant={isWide ? 'title2' : 'callout'}
+                color="secondary"
+                style={styles.greeting}
+              >
+                {greet(firstName)}
               </Text>
             </View>
           </View>

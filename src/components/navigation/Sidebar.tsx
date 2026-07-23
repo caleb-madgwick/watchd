@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Link, router, usePathname } from 'expo-router';
+import { Link, usePathname } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { Avatar } from '@/components/primitives/Avatar';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { Wordmark } from '@/components/Wordmark';
+import { useUnreadNotificationCount } from '@/features/notifications/hooks';
 import { useAuth } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
@@ -18,6 +19,7 @@ type NavHref =
   | '/tv'
   | '/search'
   | '/activity'
+  | '/notifications'
   | '/profile'
   | '/watchlist'
   | '/friends'
@@ -39,6 +41,12 @@ const BROWSE_NAV: NavItem[] = [
   { href: '/tv', title: 'TV shows', icon: 'tv-outline', iconActive: 'tv' },
   { href: '/search', title: 'Search', icon: 'search-outline', iconActive: 'search' },
   { href: '/activity', title: 'Activity', icon: 'pulse-outline', iconActive: 'pulse' },
+  {
+    href: '/notifications',
+    title: 'Notifications',
+    icon: 'notifications-outline',
+    iconActive: 'notifications',
+  },
 ];
 
 const LIBRARY_NAV: NavItem[] = [
@@ -56,7 +64,7 @@ function SectionLabel({ children }: { children: string }) {
   );
 }
 
-function NavRow({ item, active }: { item: NavItem; active: boolean }) {
+function NavRow({ item, active, badge = 0 }: { item: NavItem; active: boolean; badge?: number }) {
   const { colors } = useTheme();
   return (
     <LinkPressable
@@ -99,6 +107,13 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
         >
           {item.title}
         </Text>
+        {badge > 0 ? (
+          <View style={[styles.navBadge, { backgroundColor: colors.accent }]}>
+            <Text variant="micro" style={{ color: colors.onAccent, fontWeight: '700' }}>
+              {badge > 9 ? '9+' : badge}
+            </Text>
+          </View>
+        ) : null}
     </LinkPressable>
   );
 }
@@ -112,6 +127,7 @@ export function Sidebar() {
   const { profile } = useAuth();
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
+  const { data: unreadCount = 0 } = useUnreadNotificationCount();
 
   const isActive = (item: NavItem | string) => {
     const prefixes =
@@ -134,36 +150,19 @@ export function Sidebar() {
       >
         <Link href="/home" asChild>
           <Pressable accessibilityRole="link" accessibilityLabel="Video Club home" style={styles.brand}>
-            <Wordmark size={26} />
+            <Wordmark size={33} />
           </Pressable>
         </Link>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Log a watch"
-          onPress={() => router.push('/log')}
-          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-            styles.cta,
-            {
-              backgroundColor:
-                pressed || isActive('/log')
-                  ? colors.accentPressed
-                  : hovered
-                    ? colors.accentPressed
-                    : colors.accent,
-            },
-          ]}
-        >
-          <Ionicons name="add" size={19} color={colors.onAccent} />
-          <Text variant="headline" style={{ color: colors.onAccent, fontSize: 15 }}>
-            Log a watch
-          </Text>
-        </Pressable>
 
         <View style={styles.nav}>
           <SectionLabel>Browse</SectionLabel>
           {BROWSE_NAV.map((item) => (
-            <NavRow key={item.href} item={item} active={isActive(item)} />
+            <NavRow
+              key={item.href}
+              item={item}
+              active={isActive(item)}
+              badge={item.href === '/notifications' ? unreadCount : 0}
+            />
           ))}
 
           <View style={styles.sectionGap} />
@@ -217,15 +216,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
     alignSelf: 'flex-start',
   },
-  cta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    height: 44,
-    borderRadius: radius.full,
-    marginBottom: spacing['3xl'],
-  },
   nav: {
     flex: 1,
     gap: 2,
@@ -251,6 +241,15 @@ const styles = StyleSheet.create({
     width: 3,
     height: 20,
     borderRadius: radius.full,
+  },
+  navBadge: {
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.xs,
   },
   iconSlot: {
     width: 38,
