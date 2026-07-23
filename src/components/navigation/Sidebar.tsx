@@ -19,6 +19,8 @@ type NavHref =
   | '/activity'
   | '/profile'
   | '/watchlist'
+  | '/friends'
+  | '/shared'
   | '/settings';
 
 interface NavItem {
@@ -41,6 +43,8 @@ const BROWSE_NAV: NavItem[] = [
 const LIBRARY_NAV: NavItem[] = [
   { href: '/profile', title: 'Profile', icon: 'person-circle-outline', iconActive: 'person-circle' },
   { href: '/watchlist', title: 'Watchlist', icon: 'bookmark-outline', iconActive: 'bookmark' },
+  { href: '/friends', title: 'Friends', icon: 'people-outline', iconActive: 'people' },
+  { href: '/shared', title: 'Shared', icon: 'albums-outline', iconActive: 'albums', alsoMatch: ['/shared'] },
   { href: '/settings', title: 'Settings', icon: 'settings-outline', iconActive: 'settings' },
 ];
 
@@ -59,21 +63,27 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
       <Pressable
         accessibilityRole="link"
         accessibilityState={{ selected: active }}
-        style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-          styles.item,
-          {
-            backgroundColor: active
-              ? colors.accentSoft
-              : pressed
-                ? colors.surfaceRaised
-                : hovered
-                  ? colors.surface
-                  : 'transparent',
-          },
-        ]}
+        // Layout is inlined (not only StyleSheet-registered) so the row can
+        // never fall back to stacked column layout.
+        style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          height: 48,
+          borderRadius: radius.sm,
+          paddingHorizontal: spacing.sm,
+          backgroundColor: active
+            ? colors.accentSoft
+            : pressed
+              ? colors.surfaceRaised
+              : hovered
+                ? colors.surface
+                : 'transparent',
+        })}
       >
         {active ? <View style={[styles.activeBar, { backgroundColor: colors.accent }]} /> : null}
-        <View style={styles.iconSlot}>
+        <View
+          style={{ width: 38, alignItems: 'center', marginRight: spacing.xs, flexShrink: 0 }}
+        >
           <Ionicons
             name={active ? item.iconActive : item.icon}
             size={22}
@@ -82,7 +92,9 @@ function NavRow({ item, active }: { item: NavItem; active: boolean }) {
         </View>
         <Text
           variant="body"
+          numberOfLines={1}
           style={{
+            flexShrink: 1,
             color: active ? colors.accent : colors.text,
             fontSize: 16.5,
             fontWeight: active ? '600' : '500',
