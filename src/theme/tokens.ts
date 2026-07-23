@@ -2,8 +2,8 @@
  * Video Club design tokens — the single source of truth for the visual language.
  *
  * Identity: "the neon sign of a late-night video store, printed on a 90s
- * membership card". Charcoal night mode / warm cream day mode, hot-pink
- * primary, electric cobalt + marigold + teal as the supporting cast.
+ * membership card". Charcoal night mode / warm cream day mode, jade-green
+ * primary, marigold + cobalt + teal as the supporting cast.
  */
 
 export const palette = {
@@ -31,11 +31,12 @@ export const palette = {
   cream: '#F4F1EA',
   creamDim: '#E7E2D6',
 
-  // Hot-pink primary (neon sign)
-  pink300: '#FF7ABF',
-  pink400: '#F5479F',
-  pink500: '#D92C85',
-  pinkOnLight: '#C2187D',
+  // Jade-green primary (the neon sign)
+  jade300: '#5EE0B0',
+  jade400: '#2FCB92',
+  jade500: '#1FAF7B',
+  jade600: '#0F8A5F',
+  jadeOnLight: '#0B7355',
 
   // Electric cobalt (straight off the moodboard: #3F22EC)
   cobalt400: '#7C6BFF',
@@ -77,8 +78,9 @@ export const radius = {
 } as const;
 
 export const fontFamily = {
-  display: 'BricolageGrotesque_700Bold',
-  displayMedium: 'BricolageGrotesque_500Medium',
+  // Titan One ships one weight — chunky, rounded, shop-sign retro.
+  display: 'TitanOne_400Regular',
+  displayMedium: 'TitanOne_400Regular',
   body: 'PlusJakartaSans_400Regular',
   bodyMedium: 'PlusJakartaSans_500Medium',
   bodySemiBold: 'PlusJakartaSans_600SemiBold',
@@ -93,10 +95,10 @@ export interface TypeStyle {
 }
 
 export const typeScale = {
-  display: { fontSize: 34, lineHeight: 41, fontFamily: fontFamily.display, letterSpacing: -0.3 },
-  title1: { fontSize: 28, lineHeight: 35, fontFamily: fontFamily.display, letterSpacing: -0.2 },
-  title2: { fontSize: 22, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: -0.1 },
-  title3: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.displayMedium },
+  display: { fontSize: 32, lineHeight: 42, fontFamily: fontFamily.display, letterSpacing: 0.2 },
+  title1: { fontSize: 26, lineHeight: 35, fontFamily: fontFamily.display, letterSpacing: 0.2 },
+  title2: { fontSize: 20, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: 0.2 },
+  title3: { fontSize: 16, lineHeight: 23, fontFamily: fontFamily.displayMedium, letterSpacing: 0.3 },
   headline: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.bodySemiBold },
   body: { fontSize: 16, lineHeight: 24, fontFamily: fontFamily.body },
   callout: { fontSize: 15, lineHeight: 21, fontFamily: fontFamily.body },

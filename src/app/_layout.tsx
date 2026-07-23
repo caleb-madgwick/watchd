@@ -1,9 +1,6 @@
 import '@/global.css';
 
-import {
-  BricolageGrotesque_500Medium,
-  BricolageGrotesque_700Bold,
-} from '@expo-google-fonts/bricolage-grotesque';
+import { TitanOne_400Regular } from '@expo-google-fonts/titan-one';
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -92,8 +89,7 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
-    BricolageGrotesque_500Medium,
-    BricolageGrotesque_700Bold,
+    TitanOne_400Regular,
   });
 
   useEffect(() => {

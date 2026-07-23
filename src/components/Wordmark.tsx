@@ -26,7 +26,7 @@ export function Wordmark({ size = 34, variant = 'inline' }: WordmarkProps) {
         fontSize: size,
         lineHeight: size * 1.25,
         color: colors.text,
-        letterSpacing: -0.5,
+        letterSpacing: 0.3,
       }}
     >
       Video{' '}
@@ -36,7 +36,7 @@ export function Wordmark({ size = 34, variant = 'inline' }: WordmarkProps) {
           fontSize: size,
           lineHeight: size * 1.25,
           color: colors.accent,
-          letterSpacing: -0.5,
+          letterSpacing: 0.3,
           textShadowColor: colors.glow,
           textShadowRadius: size * 0.45,
           textShadowOffset: { width: 0, height: 0 },

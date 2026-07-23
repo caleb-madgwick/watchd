@@ -61,11 +61,11 @@ export const darkTheme: Theme = {
     text: palette.cream,
     textSecondary: palette.ink200,
     textMuted: palette.ink300,
-    onAccent: '#2B0817',
+    onAccent: '#04160F',
 
-    accent: palette.pink400,
-    accentPressed: palette.pink500,
-    accentSoft: 'rgba(245,71,159,0.16)',
+    accent: palette.jade400,
+    accentPressed: palette.jade500,
+    accentSoft: 'rgba(47,203,146,0.15)',
 
     success: palette.teal400,
     danger: palette.red500,
@@ -73,7 +73,7 @@ export const darkTheme: Theme = {
     info: palette.cobalt400,
 
     star: palette.marigold400,
-    glow: 'rgba(245,71,159,0.45)',
+    glow: 'rgba(47,203,146,0.5)',
     scrim: 'rgba(4,5,7,0.72)',
     heroScrim: ['rgba(11,13,16,0.10)', 'rgba(11,13,16,0.55)', 'rgba(11,13,16,1)'],
     skeletonBase: palette.ink750,
@@ -97,9 +97,9 @@ export const lightTheme: Theme = {
     textMuted: '#84796B',
     onAccent: '#FFFFFF',
 
-    accent: palette.pinkOnLight,
-    accentPressed: '#A31368',
-    accentSoft: 'rgba(194,24,125,0.12)',
+    accent: palette.jadeOnLight,
+    accentPressed: '#095E45',
+    accentSoft: 'rgba(11,115,85,0.12)',
 
     success: palette.teal600,
     danger: palette.red600,
@@ -107,7 +107,7 @@ export const lightTheme: Theme = {
     info: palette.cobalt600,
 
     star: palette.marigold600,
-    glow: 'rgba(194,24,125,0.22)',
+    glow: 'rgba(15,138,95,0.3)',
     scrim: 'rgba(30,20,15,0.45)',
     heroScrim: ['rgba(251,250,247,0.05)', 'rgba(251,250,247,0.55)', 'rgba(251,250,247,1)'],
     skeletonBase: palette.paper200,

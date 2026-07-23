@@ -11,8 +11,8 @@ export function RetroStripes({ width = 96, height = 5 }: { width?: number; heigh
   const { scheme } = useTheme();
   const colors =
     scheme === 'dark'
-      ? [palette.pink400, palette.cobalt400, palette.marigold400]
-      : [palette.pinkOnLight, palette.cobalt600, palette.marigold600];
+      ? [palette.jade400, palette.marigold400, palette.cobalt400]
+      : [palette.jade500, palette.marigold600, palette.cobalt600];
 
   return (
     <View style={[styles.row, { width, height }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
