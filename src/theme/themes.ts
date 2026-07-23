@@ -32,6 +32,8 @@ export interface ThemeColors {
 
   /** Star fill for ratings — always readable on both themes */
   star: string;
+  /** Neon-sign glow (shadows/text-shadows around accent elements) */
+  glow: string;
   /** Scrim behind modals/sheets */
   scrim: string;
   /** Gradient stops for backdrop heroes (top → bottom) */
@@ -59,18 +61,19 @@ export const darkTheme: Theme = {
     text: palette.cream,
     textSecondary: palette.ink200,
     textMuted: palette.ink300,
-    onAccent: '#04160F',
+    onAccent: '#2B0817',
 
-    accent: palette.jade400,
-    accentPressed: palette.jade500,
-    accentSoft: 'rgba(47,203,146,0.14)',
+    accent: palette.pink400,
+    accentPressed: palette.pink500,
+    accentSoft: 'rgba(245,71,159,0.16)',
 
     success: palette.teal400,
     danger: palette.red500,
     dangerPressed: palette.red600,
-    info: palette.blue400,
+    info: palette.cobalt400,
 
-    star: palette.jade400,
+    star: palette.marigold400,
+    glow: 'rgba(245,71,159,0.45)',
     scrim: 'rgba(4,5,7,0.72)',
     heroScrim: ['rgba(11,13,16,0.10)', 'rgba(11,13,16,0.55)', 'rgba(11,13,16,1)'],
     skeletonBase: palette.ink750,
@@ -89,22 +92,23 @@ export const lightTheme: Theme = {
     border: 'rgba(28,30,34,0.10)',
     borderStrong: 'rgba(28,30,34,0.20)',
 
-    text: '#1C1E22',
-    textSecondary: '#555C66',
-    textMuted: '#79828E',
+    text: '#221A16',
+    textSecondary: '#5D5348',
+    textMuted: '#84796B',
     onAccent: '#FFFFFF',
 
-    accent: palette.jadeOnLight,
-    accentPressed: '#095E45',
-    accentSoft: 'rgba(11,115,85,0.12)',
+    accent: palette.pinkOnLight,
+    accentPressed: '#A31368',
+    accentSoft: 'rgba(194,24,125,0.12)',
 
     success: palette.teal600,
     danger: palette.red600,
     dangerPressed: '#A32F34',
-    info: palette.blue600,
+    info: palette.cobalt600,
 
-    star: palette.jade500,
-    scrim: 'rgba(20,20,20,0.45)',
+    star: palette.marigold600,
+    glow: 'rgba(194,24,125,0.22)',
+    scrim: 'rgba(30,20,15,0.45)',
     heroScrim: ['rgba(251,250,247,0.05)', 'rgba(251,250,247,0.55)', 'rgba(251,250,247,1)'],
     skeletonBase: palette.paper200,
     skeletonHighlight: palette.paper100,

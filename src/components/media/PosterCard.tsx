@@ -29,7 +29,14 @@ export function PosterCard({ title, posterUrl, year, href, width, rating, subtit
     <LinkPressable
       href={href}
       accessibilityLabel={`${title}${year ? `, ${year}` : ''}`}
-      style={({ pressed }) => ({ width, opacity: pressed ? 0.85 : 1 })}
+      style={({ pressed, hovered }) => ({
+        width,
+        opacity: pressed ? 0.85 : 1,
+        // Rental-sleeve neon on hover (web); shadows are inert on native here.
+        ...(hovered
+          ? { shadowColor: colors.glow, shadowOpacity: 1, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } }
+          : null),
+      })}
     >
         {posterUrl ? (
           <Image

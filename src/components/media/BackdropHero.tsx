@@ -30,6 +30,15 @@ export function BackdropHero({ backdropUrl, height, children }: BackdropHeroProp
         locations={[0, 0.55, 1]}
         style={StyleSheet.absoluteFill}
       />
+      {backdropUrl ? (
+        // VHS scanlines, styled via [data-scanlines] in global.css (web only —
+        // dataSet is a react-native-web extension, hence the prop cast).
+        <View
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+          {...({ dataSet: { scanlines: 'true' } } as Record<string, unknown>)}
+        />
+      ) : null}
       {children ? <View style={styles.content}>{children}</View> : null}
     </View>
   );

@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/primitives/EmptyState';
 import { ErrorState } from '@/components/primitives/ErrorState';
 import { Screen } from '@/components/primitives/Screen';
 import { Text } from '@/components/primitives/Text';
+import { RetroStripes } from '@/components/RetroStripes';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
 import { Wordmark } from '@/components/Wordmark';
 import { config } from '@/constants/config';
@@ -90,6 +91,9 @@ export default function HomeScreen() {
           <View style={styles.header}>
             <View>
               <Wordmark size={24} />
+              <View style={styles.headerStripes}>
+                <RetroStripes width={88} height={4} />
+              </View>
               <Text variant="callout" color="secondary" style={styles.greeting}>
                 {firstName ? `What are we watching tonight, ${firstName}?` : 'What are we watching tonight?'}
               </Text>
@@ -249,8 +253,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.xl,
   },
-  greeting: {
+  headerStripes: {
     marginTop: spacing.xs,
+  },
+  greeting: {
+    marginTop: spacing.md,
   },
   demoBanner: {
     marginHorizontal: spacing.lg,

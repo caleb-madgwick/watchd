@@ -32,7 +32,7 @@ export default function AuthLayout() {
         >
           <View style={styles.card}>
             <View style={styles.brand}>
-              <Wordmark size={40} />
+              <Wordmark size={32} variant="sign" />
             </View>
             <Slot />
           </View>

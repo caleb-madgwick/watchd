@@ -1,8 +1,9 @@
 /**
  * Video Club design tokens — the single source of truth for the visual language.
  *
- * Identity: "the neon sign of a late-night video store".
- * Near-black blue-tinted charcoal, warm off-white type, one jade-green accent.
+ * Identity: "the neon sign of a late-night video store, printed on a 90s
+ * membership card". Charcoal night mode / warm cream day mode, hot-pink
+ * primary, electric cobalt + marigold + teal as the supporting cast.
  */
 
 export const palette = {
@@ -20,22 +21,29 @@ export const palette = {
   ink200: '#A8B0BA',
   ink100: '#D4D8DE',
 
-  // Warm paper ramp (light theme)
-  paper50: '#FBFAF7',
-  paper100: '#F5F3EE',
-  paper200: '#ECE9E1',
-  paper300: '#DDD9CE',
+  // Warm cream ramp (light theme — membership-card paper)
+  paper50: '#FAF3E8',
+  paper100: '#F3EBDD',
+  paper200: '#EADFCB',
+  paper300: '#DCCDB2',
 
   // Warm off-whites for dark-theme type
   cream: '#F4F1EA',
   creamDim: '#E7E2D6',
 
-  // Jade-green accent (deliberately teal-leaning, not a bright grass green)
-  jade300: '#5EE0B0',
-  jade400: '#2FCB92',
-  jade500: '#1FAF7B',
-  jade600: '#0F8A5F',
-  jadeOnLight: '#0B7355',
+  // Hot-pink primary (neon sign)
+  pink300: '#FF7ABF',
+  pink400: '#F5479F',
+  pink500: '#D92C85',
+  pinkOnLight: '#C2187D',
+
+  // Electric cobalt (straight off the moodboard: #3F22EC)
+  cobalt400: '#7C6BFF',
+  cobalt600: '#3F22EC',
+
+  // Marigold (rating stars, shelf-tag yellow)
+  marigold400: '#F5B21A',
+  marigold600: '#C98D0A',
 
   // Support
   teal400: '#3ECFCB',
@@ -43,8 +51,6 @@ export const palette = {
   red400: '#F26D72',
   red500: '#E5484D',
   red600: '#C13A3F',
-  blue400: '#6FAFF5',
-  blue600: '#2E6DB4',
 } as const;
 
 export const spacing = {
@@ -90,7 +96,7 @@ export const typeScale = {
   display: { fontSize: 34, lineHeight: 41, fontFamily: fontFamily.display, letterSpacing: -0.3 },
   title1: { fontSize: 28, lineHeight: 35, fontFamily: fontFamily.display, letterSpacing: -0.2 },
   title2: { fontSize: 22, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: -0.1 },
-  title3: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.bodySemiBold },
+  title3: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.displayMedium },
   headline: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.bodySemiBold },
   body: { fontSize: 16, lineHeight: 24, fontFamily: fontFamily.body },
   callout: { fontSize: 15, lineHeight: 21, fontFamily: fontFamily.body },

@@ -27,7 +27,12 @@ export function EmptyState({
 
   return (
     <View style={[styles.container, compact && styles.compact]}>
-      <View style={[styles.iconWrap, { backgroundColor: colors.accentSoft }]}>
+      <View
+        style={[
+          styles.iconWrap,
+          { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+        ]}
+      >
         <Ionicons name={icon} size={compact ? 22 : 30} color={colors.accent} />
       </View>
       <Text variant={compact ? 'headline' : 'title3'} align="center">
@@ -62,6 +67,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xs,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
   },
   message: {
     maxWidth: 320,
