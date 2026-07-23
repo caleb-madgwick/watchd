@@ -1,20 +1,20 @@
 {
   "expo": {
-    "name": "Watchd",
-    "slug": "watchd",
+    "name": "Video Club",
+    "slug": "video-club",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "watchd",
+    "scheme": "videoclub",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0B0D10",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "app.watchd.mobile",
+      "bundleIdentifier": "app.videoclub.mobile",
       "supportsTablet": true
     },
     "android": {
-      "package": "app.watchd.mobile",
+      "package": "app.videoclub.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#0B0D10",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -42,7 +42,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Watchd uses your photo library so you can choose a profile picture."
+          "photosPermission": "Video Club uses your photo library so you can choose a profile picture."
         }
       ],
       "expo-image",

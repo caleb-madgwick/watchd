@@ -45,7 +45,7 @@ export default function ReviewDetailScreen() {
 
   return (
     <ProfileSubpageShell title="Review">
-      <Stack.Screen options={{ title: 'Review — Watchd' }} />
+      <Stack.Screen options={{ title: 'Review — Video Club' }} />
       <View style={styles.page}>
         {review.isLoading ? (
           <CardListSkeleton count={1} />

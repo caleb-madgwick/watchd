@@ -21,7 +21,7 @@ export default function UserDiaryScreen() {
 
   return (
     <ProfileSubpageShell title="Diary" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `Diary of @${username ?? ''} — Watchd` }} />
+      <Stack.Screen options={{ title: `Diary of @${username ?? ''} — Video Club` }} />
       {profile.isLoading || diary.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={6} />

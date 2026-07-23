@@ -21,7 +21,7 @@ export default function UserProfileScreen() {
   return (
     <Screen>
       <Stack.Screen
-        options={{ title: profile.data ? `@${profile.data.username} — Watchd` : 'Profile — Watchd' }}
+        options={{ title: profile.data ? `@${profile.data.username} — Video Club` : 'Profile — Video Club' }}
       />
       <IconButton
         icon="chevron-back"

@@ -52,7 +52,7 @@ export default function ListDetailScreen() {
           : undefined
       }
     >
-      <Stack.Screen options={{ title: list.data ? `${list.data.name} — Watchd` : 'List — Watchd' }} />
+      <Stack.Screen options={{ title: list.data ? `${list.data.name} — Video Club` : 'List — Video Club' }} />
       {list.isLoading || items.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={5} />

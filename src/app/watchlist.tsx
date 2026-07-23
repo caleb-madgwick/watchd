@@ -61,7 +61,7 @@ export default function WatchlistScreen() {
       title="Watchlist"
       subtitle={watchlist.data ? `${watchlist.data.length} saved` : undefined}
     >
-      <Stack.Screen options={{ title: 'Watchlist — Watchd' }} />
+      <Stack.Screen options={{ title: 'Watchlist — Video Club' }} />
       {config.demoMode || !session ? (
         <EmptyState
           icon="bookmark-outline"

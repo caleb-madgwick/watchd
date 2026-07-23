@@ -62,7 +62,7 @@ export default function SignUpScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Create account — Watchd' }} />
+      <Stack.Screen options={{ title: 'Create account — Video Club' }} />
       <Text variant="title2">Create your account</Text>
       <Text variant="callout" color="secondary" style={styles.subtitle}>
         A home for everything you watch.

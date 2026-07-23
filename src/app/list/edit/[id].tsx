@@ -19,7 +19,7 @@ export default function EditListScreen() {
 
   return (
     <ProfileSubpageShell title="Edit list">
-      <Stack.Screen options={{ title: 'Edit list — Watchd' }} />
+      <Stack.Screen options={{ title: 'Edit list — Video Club' }} />
       <View style={styles.page}>
         {list.isLoading ? (
           <CardListSkeleton count={2} />

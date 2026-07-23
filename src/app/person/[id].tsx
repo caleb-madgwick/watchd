@@ -40,7 +40,7 @@ export default function PersonDetailScreen() {
   return (
     <Screen>
       <Stack.Screen
-        options={{ title: person.data ? `${person.data.name} — Watchd` : 'Person — Watchd' }}
+        options={{ title: person.data ? `${person.data.name} — Video Club` : 'Person — Video Club' }}
       />
       <IconButton
         icon="chevron-back"

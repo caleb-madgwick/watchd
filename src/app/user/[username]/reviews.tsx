@@ -19,7 +19,7 @@ export default function UserReviewsScreen() {
 
   return (
     <ProfileSubpageShell title="Reviews" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `Reviews by @${username ?? ''} — Watchd` }} />
+      <Stack.Screen options={{ title: `Reviews by @${username ?? ''} — Video Club` }} />
       {profile.isLoading || reviews.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={4} />

@@ -17,7 +17,7 @@ export default function FollowersScreen() {
 
   return (
     <ProfileSubpageShell title="Followers" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `Followers of @${username ?? ''} — Watchd` }} />
+      <Stack.Screen options={{ title: `Followers of @${username ?? ''} — Video Club` }} />
       {profile.isLoading || followers.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={5} />

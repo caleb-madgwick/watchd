@@ -31,7 +31,7 @@ export default function CreateSharedWatchlistScreen() {
 
   return (
     <ProfileSubpageShell title="New shared watchlist">
-      <Stack.Screen options={{ title: 'New shared watchlist — Watchd' }} />
+      <Stack.Screen options={{ title: 'New shared watchlist — Video Club' }} />
       <View style={styles.page}>
         {config.demoMode || !session ? (
           <EmptyState

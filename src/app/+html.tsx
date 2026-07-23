@@ -12,10 +12,10 @@ export default function Root({ children }: PropsWithChildren) {
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <title>Watchd — track what you watch</title>
+        <title>Video Club — track what you watch</title>
         <meta
           name="description"
-          content="Watchd is a social tracker for movies and TV. Log what you watch, rate and review, keep a watchlist, and follow friends."
+          content="Video Club is a social tracker for movies and TV. Log what you watch, rate and review, keep a watchlist, and follow friends."
         />
         <meta name="theme-color" content="#0B0D10" />
         <ScrollViewStyleReset />

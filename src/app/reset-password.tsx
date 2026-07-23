@@ -47,7 +47,7 @@ export default function ResetPasswordScreen() {
 
   return (
     <Screen padTop padBottom>
-      <Stack.Screen options={{ title: 'Choose a new password — Watchd' }} />
+      <Stack.Screen options={{ title: 'Choose a new password — Video Club' }} />
       <View style={styles.container}>
         <View style={styles.brand}>
           <Wordmark size={36} />
@@ -56,7 +56,7 @@ export default function ResetPasswordScreen() {
           <>
             <Text variant="title2">Password updated</Text>
             <Text variant="callout" color="secondary">
-              You’re all set. Continue to Watchd.
+              You’re all set. Continue to Video Club.
             </Text>
             <Button title="Continue" fullWidth size="lg" onPress={() => router.replace('/')} />
           </>

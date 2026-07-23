@@ -105,7 +105,7 @@ export default function SharedWatchlistsScreen() {
       title="Shared watchlists"
       subtitle={watchlists.data ? `${items.length} shared` : undefined}
     >
-      <Stack.Screen options={{ title: 'Shared watchlists — Watchd' }} />
+      <Stack.Screen options={{ title: 'Shared watchlists — Video Club' }} />
       {config.demoMode || !session ? (
         <EmptyState
           icon="albums-outline"

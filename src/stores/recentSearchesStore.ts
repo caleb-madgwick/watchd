@@ -30,7 +30,7 @@ export const useRecentSearches = create<RecentSearchesState>()(
       clear: () => set({ searches: [] }),
     }),
     {
-      name: 'watchd.recentSearches',
+      name: 'videoclub.recentSearches',
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

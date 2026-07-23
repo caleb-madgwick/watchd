@@ -15,7 +15,7 @@ export default function CreateListScreen() {
 
   return (
     <ProfileSubpageShell title="New list">
-      <Stack.Screen options={{ title: 'New list — Watchd' }} />
+      <Stack.Screen options={{ title: 'New list — Video Club' }} />
       <View style={styles.page}>
         {config.demoMode || !session ? (
           <EmptyState

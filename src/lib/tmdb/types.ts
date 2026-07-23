@@ -1,5 +1,5 @@
 /**
- * Raw TMDB API response shapes (the subset Watchd consumes).
+ * Raw TMDB API response shapes (the subset Video Club consumes).
  * These types never leave src/lib/tmdb — normalize.ts converts them into
  * domain models at the trust boundary.
  */

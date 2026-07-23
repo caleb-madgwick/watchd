@@ -114,7 +114,7 @@ export default function SharedWatchlistDetailScreen() {
       }
     >
       <Stack.Screen
-        options={{ title: data ? `${data.name} — Watchd` : 'Shared watchlist — Watchd' }}
+        options={{ title: data ? `${data.name} — Video Club` : 'Shared watchlist — Video Club' }}
       />
       {detail.isLoading ? (
         <View style={styles.loading}>

@@ -46,7 +46,7 @@ export default function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Sign in — Watchd' }} />
+      <Stack.Screen options={{ title: 'Sign in — Video Club' }} />
       <Text variant="title2">Welcome back</Text>
       <Text variant="callout" color="secondary" style={styles.subtitle}>
         Track what you watch. Share what you love.
@@ -117,7 +117,7 @@ export default function SignInScreen() {
           </Link>
           <View style={styles.footer}>
             <Text variant="subhead" color="secondary">
-              New to Watchd?{' '}
+              New to Video Club?{' '}
             </Text>
             <Link href="/(auth)/sign-up" asChild>
               <Text variant="subhead" color="accent" accessibilityRole="link">

@@ -22,7 +22,7 @@ export default function UserWatchedScreen() {
 
   return (
     <ProfileSubpageShell title="Watched" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `Watched by @${username ?? ''} — Watchd` }} />
+      <Stack.Screen options={{ title: `Watched by @${username ?? ''} — Video Club` }} />
       <View style={styles.controls}>
         <SegmentedControl
           options={[

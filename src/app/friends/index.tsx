@@ -74,7 +74,7 @@ export default function FriendsScreen() {
       title="Friends"
       subtitle={friends.data ? `${friendItems.length} friends` : undefined}
     >
-      <Stack.Screen options={{ title: 'Friends — Watchd' }} />
+      <Stack.Screen options={{ title: 'Friends — Video Club' }} />
       {config.demoMode || !session ? (
         <EmptyState
           icon="people-outline"

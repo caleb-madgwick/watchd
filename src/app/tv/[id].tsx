@@ -52,7 +52,7 @@ export default function TvDetailScreen() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: tv ? `${tv.title} — Watchd` : 'TV show — Watchd' }} />
+      <Stack.Screen options={{ title: tv ? `${tv.title} — Video Club` : 'TV show — Video Club' }} />
       {details.isLoading ? (
         <View style={styles.loading}>
           <Skeleton height={280} radius={0} />

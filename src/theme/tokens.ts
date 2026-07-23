@@ -1,8 +1,8 @@
 /**
- * Watchd design tokens — the single source of truth for the visual language.
+ * Video Club design tokens — the single source of truth for the visual language.
  *
- * Identity: "the quiet glow of a cinema before the film starts".
- * Near-black blue-tinted charcoal, warm off-white type, one marquee-gold accent.
+ * Identity: "the neon sign of a late-night video store".
+ * Near-black blue-tinted charcoal, warm off-white type, one jade-green accent.
  */
 
 export const palette = {
@@ -30,17 +30,16 @@ export const palette = {
   cream: '#F4F1EA',
   creamDim: '#E7E2D6',
 
-  // Marquee gold accent
-  gold300: '#F2CB6C',
-  gold400: '#E8B640',
-  gold500: '#D9A32A',
-  gold600: '#B8860F',
-  goldOnDark: '#E8B640',
-  goldOnLight: '#9A6E0B',
+  // Jade-green accent (deliberately teal-leaning, not a bright grass green)
+  jade300: '#5EE0B0',
+  jade400: '#2FCB92',
+  jade500: '#1FAF7B',
+  jade600: '#0F8A5F',
+  jadeOnLight: '#0B7355',
 
   // Support
-  green400: '#4AD48A',
-  green600: '#1F7A4D',
+  teal400: '#3ECFCB',
+  teal600: '#177E7B',
   red400: '#F26D72',
   red500: '#E5484D',
   red600: '#C13A3F',
@@ -72,12 +71,12 @@ export const radius = {
 } as const;
 
 export const fontFamily = {
-  display: 'SpaceGrotesk_700Bold',
-  displayMedium: 'SpaceGrotesk_500Medium',
-  body: 'Inter_400Regular',
-  bodyMedium: 'Inter_500Medium',
-  bodySemiBold: 'Inter_600SemiBold',
-  bodyBold: 'Inter_700Bold',
+  display: 'BricolageGrotesque_700Bold',
+  displayMedium: 'BricolageGrotesque_500Medium',
+  body: 'PlusJakartaSans_400Regular',
+  bodyMedium: 'PlusJakartaSans_500Medium',
+  bodySemiBold: 'PlusJakartaSans_600SemiBold',
+  bodyBold: 'PlusJakartaSans_700Bold',
 } as const;
 
 export interface TypeStyle {
@@ -88,9 +87,9 @@ export interface TypeStyle {
 }
 
 export const typeScale = {
-  display: { fontSize: 34, lineHeight: 40, fontFamily: fontFamily.display, letterSpacing: -0.5 },
-  title1: { fontSize: 28, lineHeight: 34, fontFamily: fontFamily.display, letterSpacing: -0.4 },
-  title2: { fontSize: 22, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: -0.2 },
+  display: { fontSize: 34, lineHeight: 41, fontFamily: fontFamily.display, letterSpacing: -0.3 },
+  title1: { fontSize: 28, lineHeight: 35, fontFamily: fontFamily.display, letterSpacing: -0.2 },
+  title2: { fontSize: 22, lineHeight: 28, fontFamily: fontFamily.display, letterSpacing: -0.1 },
   title3: { fontSize: 18, lineHeight: 24, fontFamily: fontFamily.bodySemiBold },
   headline: { fontSize: 16, lineHeight: 22, fontFamily: fontFamily.bodySemiBold },
   body: { fontSize: 16, lineHeight: 24, fontFamily: fontFamily.body },

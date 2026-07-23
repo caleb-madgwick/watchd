@@ -48,7 +48,7 @@ export default function MovieDetailScreen() {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: movie ? `${movie.title} — Watchd` : 'Movie — Watchd' }} />
+      <Stack.Screen options={{ title: movie ? `${movie.title} — Video Club` : 'Movie — Video Club' }} />
       {details.isLoading ? (
         <View style={styles.loading}>
           <Skeleton height={280} radius={0} />

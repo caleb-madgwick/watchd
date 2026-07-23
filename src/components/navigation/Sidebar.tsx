@@ -134,7 +134,7 @@ export function Sidebar() {
         ]}
       >
         <Link href="/home" asChild>
-          <Pressable accessibilityRole="link" accessibilityLabel="Watchd home" style={styles.brand}>
+          <Pressable accessibilityRole="link" accessibilityLabel="Video Club home" style={styles.brand}>
             <Wordmark size={26} />
           </Pressable>
         </Link>

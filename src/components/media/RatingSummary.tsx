@@ -9,7 +9,7 @@ export interface RatingSummaryProps {
   /** TMDB average on its native 0–10 scale — always labelled as external. */
   tmdbRating?: number;
   tmdbVoteCount?: number;
-  /** Watchd community average on the 0–5 scale. */
+  /** Video Club community average on the 0–5 scale. */
   communityRating?: number | null;
   communityCount?: number;
   watchedCount?: number;
@@ -34,7 +34,7 @@ export function RatingSummary({
           </Text>
         </View>
         <Text variant="caption" color="muted">
-          Watchd · {communityCount} rating{communityCount === 1 ? '' : 's'}
+          Video Club · {communityCount} rating{communityCount === 1 ? '' : 's'}
         </Text>
       </View>
 

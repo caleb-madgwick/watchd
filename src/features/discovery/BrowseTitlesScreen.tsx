@@ -57,7 +57,7 @@ export function BrowseTitlesScreen({ mediaType }: { mediaType: MediaType }) {
 
   return (
     <Screen>
-      <Stack.Screen options={{ title: `${heading} — Watchd` }} />
+      <Stack.Screen options={{ title: `${heading} — Video Club` }} />
       <View style={[styles.page, { paddingTop: insets.top + spacing.lg }]}>
         <View style={styles.header}>
           <Text variant="title1">{heading}</Text>

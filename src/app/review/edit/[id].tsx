@@ -89,7 +89,7 @@ export default function EditReviewScreen() {
 
   return (
     <ProfileSubpageShell title="Edit review">
-      <Stack.Screen options={{ title: 'Edit review — Watchd' }} />
+      <Stack.Screen options={{ title: 'Edit review — Video Club' }} />
       <View style={styles.page}>
         {review.isLoading ? (
           <CardListSkeleton count={1} />

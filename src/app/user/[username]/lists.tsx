@@ -16,7 +16,7 @@ export default function UserListsScreen() {
 
   return (
     <ProfileSubpageShell title="Lists" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `Lists by @${username ?? ''} — Watchd` }} />
+      <Stack.Screen options={{ title: `Lists by @${username ?? ''} — Video Club` }} />
       {profile.isLoading || lists.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={4} />

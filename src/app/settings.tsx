@@ -149,7 +149,7 @@ export default function SettingsScreen() {
 
   return (
     <ProfileSubpageShell title="Settings" subtitle={`@${profile.username}`}>
-      <Stack.Screen options={{ title: 'Settings — Watchd' }} />
+      <Stack.Screen options={{ title: 'Settings — Video Club' }} />
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Section title="Profile">
           <Pressable
@@ -296,8 +296,8 @@ export default function SettingsScreen() {
       >
         <Text variant="callout" color="secondary">
           {legalOpen === 'privacy'
-            ? 'Placeholder privacy policy. Watchd stores the account details you provide (email, username, profile), your tracking data (statuses, ratings, reviews, lists, follows) and nothing else. Metadata about movies and shows comes from TMDB. Replace this text with your full policy before public release.'
-            : 'Placeholder terms of use. Watchd is provided as-is during development. Be kind in reviews, mark your spoilers, and do not post content you do not have the right to share. Replace this text with your full terms before public release.'}
+            ? 'Placeholder privacy policy. Video Club stores the account details you provide (email, username, profile), your tracking data (statuses, ratings, reviews, lists, follows) and nothing else. Metadata about movies and shows comes from TMDB. Replace this text with your full policy before public release.'
+            : 'Placeholder terms of use. Video Club is provided as-is during development. Be kind in reviews, mark your spoilers, and do not post content you do not have the right to share. Replace this text with your full terms before public release.'}
         </Text>
       </Modal>
     </ProfileSubpageShell>

@@ -17,7 +17,7 @@ export default function FollowingScreen() {
 
   return (
     <ProfileSubpageShell title="Following" subtitle={username ? `@${username}` : undefined}>
-      <Stack.Screen options={{ title: `@${username ?? ''} follows — Watchd` }} />
+      <Stack.Screen options={{ title: `@${username ?? ''} follows — Video Club` }} />
       {profile.isLoading || following.isLoading ? (
         <View style={styles.loading}>
           <CardListSkeleton count={5} />

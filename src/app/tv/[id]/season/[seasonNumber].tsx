@@ -80,7 +80,7 @@ export default function SeasonDetailScreen() {
     <Screen>
       <Stack.Screen
         options={{
-          title: tv.data ? `${tv.data.title} · ${season.data?.name ?? `Season ${seasonNumber}`} — Watchd` : 'Season — Watchd',
+          title: tv.data ? `${tv.data.title} · ${season.data?.name ?? `Season ${seasonNumber}`} — Video Club` : 'Season — Video Club',
         }}
       />
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm, borderBottomColor: colors.border }]}>

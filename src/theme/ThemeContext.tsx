@@ -6,7 +6,7 @@ import { darkTheme, lightTheme, type Theme } from './themes';
 
 export type ThemePreference = 'dark' | 'light' | 'system';
 
-const STORAGE_KEY = 'watchd.themePreference';
+const STORAGE_KEY = 'videoclub.themePreference';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -14,7 +14,7 @@ interface ThemeContextValue {
   setPreference: (preference: ThemePreference) => void;
 }
 
-// Watchd defaults to its polished dark theme; users can opt into light/system.
+// Video Club defaults to its polished dark theme; users can opt into light/system.
 const ThemeContext = createContext<ThemeContextValue>({
   theme: darkTheme,
   preference: 'dark',

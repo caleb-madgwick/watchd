@@ -44,7 +44,7 @@ export default function ForgotPasswordScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Reset password — Watchd' }} />
+      <Stack.Screen options={{ title: 'Reset password — Video Club' }} />
       <Text variant="title2">Reset your password</Text>
       {sent ? (
         <>
