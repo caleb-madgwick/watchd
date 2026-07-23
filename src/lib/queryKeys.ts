@@ -37,6 +37,8 @@ export const queryKeys = {
     tmdbId === undefined ? (['tvProgress', userId] as const) : (['tvProgress', userId, tmdbId] as const),
   continueWatching: (userId: string) => ['continueWatching', userId] as const,
   feed: () => ['feed'] as const,
+  notifications: () => ['notifications'] as const,
+  unreadNotificationCount: () => ['unreadNotificationCount'] as const,
   followers: (userId: string) => ['followers', userId] as const,
   following: (userId: string) => ['following', userId] as const,
   followState: (targetUserId: string) => ['followState', targetUserId] as const,
@@ -53,5 +55,12 @@ export const queryKeys = {
     ['listMembership', userId, mediaType, tmdbId] as const,
   favourites: (userId: string) => ['favourites', userId] as const,
   userActivity: (userId: string) => ['userActivity', userId] as const,
+  userStats: (userId: string, year: number | null) =>
+    ['userStats', userId, year ?? 'all'] as const,
+  watchChallenge: (userId: string, year: number) => ['watchChallenge', userId, year] as const,
+  userBadges: (userId: string) => ['userBadges', userId] as const,
+  comments: (targetType: string, targetId: string) => ['comments', targetType, targetId] as const,
+  blockedUsers: () => ['blockedUsers'] as const,
+  blocking: (targetUserId: string) => ['blocking', targetUserId] as const,
   recentReviewsFromFollows: (userId: string) => ['recentReviewsFromFollows', userId] as const,
 } as const;

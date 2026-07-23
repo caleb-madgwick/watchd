@@ -15,6 +15,7 @@ import { config, limits } from '@/constants/config';
 import { ONBOARDING_GENRES } from '@/constants/genres';
 import { pickAndUploadAvatar, updateProfile } from '@/features/profile/api';
 import { ProfileSubpageShell } from '@/features/profile/ProfileSubpageShell';
+import { useBlockedUsers, useToggleBlock, type BlockedUser } from '@/features/social/blocks';
 import { track } from '@/lib/analytics';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
@@ -25,7 +26,8 @@ import type { NotificationPrefs } from '@/types/database';
 
 const NOTIFICATION_OPTIONS: { key: keyof NotificationPrefs; label: string; caption: string }[] = [
   { key: 'new_followers', label: 'New followers', caption: 'When someone follows you' },
-  { key: 'review_likes', label: 'Review likes', caption: 'When someone likes one of your reviews' },
+  { key: 'review_likes', label: 'Likes', caption: 'When someone likes your reviews, lists or diary' },
+  { key: 'comments', label: 'Comments', caption: 'When someone comments or replies to you' },
   { key: 'friend_activity', label: 'Friend activity', caption: 'Friend requests and shared watchlists' },
 ];
 
@@ -40,6 +42,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
         {children}
       </View>
     </View>
+  );
+}
+
+function BlockedRow({ user }: { user: BlockedUser }) {
+  const toggle = useToggleBlock(user.id);
+  return (
+    <View style={styles.blockedRow}>
+      <Avatar url={user.avatarUrl} name={user.displayName} size={34} />
+      <View style={styles.blockedText}>
+        <Text variant="callout" numberOfLines={1}>
+          {user.displayName}
+        </Text>
+        <Text variant="caption" color="muted" numberOfLines={1}>
+          @{user.username}
+        </Text>
+      </View>
+      <Button
+        title="Unblock"
+        variant="secondary"
+        size="sm"
+        loading={toggle.isPending}
+        onPress={() => toggle.mutate(false)}
+      />
+    </View>
+  );
+}
+
+function BlockedAccountsSection() {
+  const blocked = useBlockedUsers();
+  if (config.demoMode || !blocked.data || blocked.data.length === 0) return null;
+  return (
+    <Section title="Blocked accounts">
+      {blocked.data.map((user) => (
+        <BlockedRow key={user.id} user={user} />
+      ))}
+    </Section>
   );
 }
 
@@ -215,8 +253,23 @@ export default function SettingsScreen() {
             </View>
           ))}
           <Text variant="footnote" color="muted">
-            Your choices are saved now and will apply when notification delivery launches.
+            These control your in-app notifications. Push delivery arrives on device once enabled.
           </Text>
+        </Section>
+
+        <BlockedAccountsSection />
+
+        <Section title="Data">
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/import')}
+            style={styles.linkRow}
+          >
+            <Text variant="callout">Import from Letterboxd</Text>
+            <Text variant="caption" color="muted">
+              Bring your films, ratings and diary across
+            </Text>
+          </Pressable>
         </Section>
 
         <Section title="Privacy & legal">
@@ -328,6 +381,16 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   switchLabel: {
+    flex: 1,
+    gap: 1,
+  },
+  blockedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  blockedText: {
     flex: 1,
     gap: 1,
   },

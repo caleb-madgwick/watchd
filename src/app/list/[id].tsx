@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { TitleCard } from '@/components/media/TitleCard';
+import { CommentsSection } from '@/features/comments/CommentsSection';
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { ErrorState } from '@/components/primitives/ErrorState';
@@ -12,10 +13,12 @@ import { CardListSkeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
 import {
   useDeleteList,
+  useDuplicateList,
   useList,
   useListItems,
   useRemoveFromList,
   useReorderList,
+  useToggleListLike,
 } from '@/features/lists/hooks';
 import { ProfileSubpageShell } from '@/features/profile/ProfileSubpageShell';
 import { useCurrentUserId } from '@/providers/AuthProvider';
@@ -30,6 +33,8 @@ export default function ListDetailScreen() {
   const removeFromList = useRemoveFromList(id ?? '');
   const reorder = useReorderList(id ?? '');
   const deleteList = useDeleteList();
+  const toggleLike = useToggleListLike(id ?? '');
+  const duplicate = useDuplicateList();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isOwner = !!list.data && list.data.ownerId === currentUserId;
@@ -81,6 +86,28 @@ export default function ListDetailScreen() {
                   {list.data.description}
                 </Text>
               ) : null}
+              {currentUserId ? (
+                <View style={styles.ownerActions}>
+                  <Button
+                    title={list.data.likeCount > 0 ? String(list.data.likeCount) : 'Like'}
+                    variant={list.data.likedByMe ? 'primary' : 'secondary'}
+                    size="sm"
+                    icon={list.data.likedByMe ? 'heart' : 'heart-outline'}
+                    onPress={() => toggleLike.mutate(!(list.data?.likedByMe ?? false))}
+                  />
+                  <Button
+                    title="Copy"
+                    variant="secondary"
+                    size="sm"
+                    icon="copy-outline"
+                    loading={duplicate.isPending}
+                    onPress={() => {
+                      const data = list.data;
+                      if (data) duplicate.mutate(data.id);
+                    }}
+                  />
+                </View>
+              ) : null}
               {isOwner ? (
                 <View style={styles.ownerActions}>
                   <Button
@@ -114,6 +141,13 @@ export default function ListDetailScreen() {
                   : 'Titles will appear once the owner adds them.'
               }
             />
+          }
+          ListFooterComponent={
+            list.data ? (
+              <View style={styles.commentsWrap}>
+                <CommentsSection targetType="list" targetId={list.data.id} />
+              </View>
+            ) : null
           }
           renderItem={({ item, index }) => (
             <View style={styles.itemRow}>
@@ -199,6 +233,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
     gap: spacing.md,
+  },
+  commentsWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
   },
   ownerActions: {
     flexDirection: 'row',

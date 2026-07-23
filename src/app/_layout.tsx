@@ -22,6 +22,7 @@ import { DiscTransitionHost } from '@/components/DiscTransitionHost';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { ToastHost } from '@/components/primitives/Toast';
 import { config } from '@/constants/config';
+import { usePushNotifications } from '@/features/notifications/push';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
@@ -37,6 +38,8 @@ function AppShell() {
   const { session } = useAuth();
   const { isWide } = useBreakpoint();
   const pathname = usePathname();
+
+  usePushNotifications(session?.user?.id ?? null);
 
   const navTheme = {
     ...DefaultTheme,

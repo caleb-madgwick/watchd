@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { AppState, Platform } from 'react-native';
 
+import { unregisterPushToken } from '@/features/notifications/push';
 import { supabase } from '@/lib/supabase/client';
 import { mapProfileRow, type Profile } from '@/types/profile';
 
@@ -101,6 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (!supabase) return;
+    // Release this device's push token while the session is still valid.
+    await unregisterPushToken();
     await supabase.auth.signOut();
   }, []);
 

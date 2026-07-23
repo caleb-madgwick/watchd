@@ -8,15 +8,39 @@
 export type MediaTypeRow = 'movie' | 'tv';
 export type WatchStatusRow = 'watchlist' | 'watching' | 'watched' | 'paused' | 'dropped';
 export type ListVisibilityRow = 'public' | 'private';
-export type ActivityTypeRow = 'logged' | 'tv_completed' | 'list_created' | 'followed';
+export type ActivityTypeRow =
+  | 'logged'
+  | 'tv_completed'
+  | 'list_created'
+  | 'followed'
+  | 'reviewed'
+  | 'commented'
+  | 'liked_list'
+  | 'friend_accepted'
+  | 'challenge_completed'
+  | 'badge_earned';
 export type FriendStatusRow = 'pending' | 'accepted';
 export type SharedWatchlistRoleRow = 'owner' | 'member';
 export type SharedWatchlistInviteStatusRow = 'pending' | 'accepted' | 'declined';
+export type CommentTargetRow = 'review' | 'list' | 'diary_entry';
+export type LikeTargetRow = 'list' | 'diary_entry' | 'comment';
+export type NotificationTypeRow =
+  | 'new_follower'
+  | 'review_like'
+  | 'list_like'
+  | 'diary_like'
+  | 'comment'
+  | 'comment_reply'
+  | 'friend_request'
+  | 'friend_accepted'
+  | 'badge_earned'
+  | 'challenge_completed';
 
 export type NotificationPrefs = {
   new_followers?: boolean;
   review_likes?: boolean;
   friend_activity?: boolean;
+  comments?: boolean;
 };
 
 export type ProfileRow = {
@@ -44,8 +68,33 @@ export type TitleRow = {
   poster_path: string | null;
   backdrop_path: string | null;
   release_date: string | null;
+  genre_ids: number[];
+  runtime_minutes: number | null;
+  original_language: string | null;
   metadata_updated_at: string;
   created_at: string;
+}
+
+export type TitlePersonDepartment = 'cast' | 'director' | 'creator' | 'crew';
+
+export type TitlePersonRow = {
+  id: string;
+  title_id: string;
+  person_tmdb_id: number;
+  name: string;
+  department: TitlePersonDepartment;
+  job: string | null;
+  ord: number;
+  created_at: string;
+}
+
+/** One person passed to the set_title_people RPC. */
+export type TitlePersonInput = {
+  person_tmdb_id: number;
+  name: string;
+  department: TitlePersonDepartment;
+  job?: string | null;
+  ord?: number;
 }
 
 export type UserTitleStatusRow = {
@@ -56,6 +105,7 @@ export type UserTitleStatusRow = {
   rating: number | null;
   watched_at: string | null;
   is_favourite: boolean;
+  favourite_rank: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -67,6 +117,8 @@ export type DiaryEntryRow = {
   watched_at: string;
   rating: number | null;
   is_rewatch: boolean;
+  like_count: number;
+  comment_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -92,6 +144,7 @@ export type ReviewRow = {
   contains_spoilers: boolean;
   published: boolean;
   like_count: number;
+  comment_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -168,6 +221,8 @@ export type ListRow = {
   description: string | null;
   visibility: ListVisibilityRow;
   item_count: number;
+  like_count: number;
+  comment_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -200,6 +255,104 @@ export type ReportRow = {
   reason: string;
   details: string | null;
   created_at: string;
+}
+
+export type CommentRow = {
+  id: string;
+  user_id: string;
+  target_type: CommentTargetRow;
+  target_id: string;
+  parent_id: string | null;
+  body: string;
+  like_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ContentLikeRow = {
+  user_id: string;
+  target_type: LikeTargetRow;
+  target_id: string;
+  created_at: string;
+}
+
+export type NotificationTargetType = 'review' | 'list' | 'diary_entry' | 'comment' | 'profile';
+
+export type NotificationRow = {
+  id: string;
+  recipient_id: string;
+  type: NotificationTypeRow;
+  actor_id: string | null;
+  target_type: NotificationTargetType | null;
+  target_id: string | null;
+  metadata: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export type PushTokenRow = {
+  token: string;
+  user_id: string;
+  platform: 'ios' | 'android' | 'web';
+  created_at: string;
+  updated_at: string;
+}
+
+export type UserChallengeRow = {
+  user_id: string;
+  year: number;
+  goal: number;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type BadgeRow = {
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  sort: number;
+}
+
+export type UserBadgeRow = {
+  user_id: string;
+  badge_code: string;
+  awarded_at: string;
+  metadata: Record<string, unknown>;
+}
+
+export type TitleTagRow = {
+  user_id: string;
+  title_id: string;
+  tag: string;
+  created_at: string;
+}
+
+export type PersonFollowRow = {
+  user_id: string;
+  person_tmdb_id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string | null;
+  created_at: string;
+}
+
+/** Shape returned by get_watch_challenge(). goal is null when unset. */
+export type WatchChallenge = {
+  year: number;
+  goal: number | null;
+  watched: number;
+  completed: boolean;
+}
+
+/** One entry from get_user_badges(). */
+export type UserBadge = {
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  awarded_at: string;
 }
 
 /** Shape returned by the get_activity_feed() RPC (one JSON object per activity). */
@@ -257,6 +410,43 @@ export type ProfileSnippet = {
 }
 
 export type FriendRequestResult = { id: string; status: FriendStatusRow };
+
+export type ToggleLikeResult = { liked: boolean; like_count: number };
+
+/** Shape returned by get_notifications() (one JSON object per notification). */
+export type NotificationItem = {
+  id: string;
+  type: NotificationTypeRow;
+  target_type: NotificationTargetType | null;
+  target_id: string | null;
+  metadata: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+  actor: ProfileSnippet | null;
+}
+
+type StatPerson = { tmdb_id: number; name: string; count: number };
+
+/** Shape returned by get_user_stats(). `blocked` is set instead when hidden. */
+export type UserStats = {
+  blocked?: boolean;
+  films_watched: number;
+  shows_watched: number;
+  rewatches: number;
+  hours_watched: number;
+  ratings_count: number;
+  average_rating: number | null;
+  /** Half-star value (as string key) → count, e.g. { "4.5": 12 }. */
+  rating_distribution: Record<string, number>;
+  top_decades: { decade: number; count: number }[];
+  top_genres: { genre_id: number; count: number }[];
+  top_directors: StatPerson[];
+  top_actors: StatPerson[];
+  languages: { language: string; count: number }[];
+  busiest_month: { month: string; count: number } | null;
+  longest_streak: number;
+  available_years: number[];
+}
 
 /** Shape returned by get_shared_watchlists() (one entry per membership). */
 export type SharedWatchlistSummaryPayload = {
@@ -472,6 +662,49 @@ export type Database = {
         ]
       >;
       reports: TableShape<ReportRow>;
+      comments: TableShape<
+        CommentRow,
+        [
+          ProfileRel<'comments_user_id_fkey', 'user_id'>,
+          {
+            foreignKeyName: 'comments_parent_id_fkey';
+            columns: ['parent_id'];
+            isOneToOne: false;
+            referencedRelation: 'comments';
+            referencedColumns: ['id'];
+          },
+        ]
+      >;
+      content_likes: TableShape<ContentLikeRow, [ProfileRel<'content_likes_user_id_fkey', 'user_id'>]>;
+      notifications: TableShape<
+        NotificationRow,
+        [
+          ProfileRel<'notifications_recipient_id_fkey', 'recipient_id'>,
+          ProfileRel<'notifications_actor_id_fkey', 'actor_id'>,
+        ]
+      >;
+      push_tokens: TableShape<PushTokenRow, [ProfileRel<'push_tokens_user_id_fkey', 'user_id'>]>;
+      title_people: TableShape<TitlePersonRow, [TitleRel<'title_people_title_id_fkey'>]>;
+      user_challenges: TableShape<UserChallengeRow, [ProfileRel<'user_challenges_user_id_fkey', 'user_id'>]>;
+      badges: TableShape<BadgeRow>;
+      user_badges: TableShape<
+        UserBadgeRow,
+        [
+          ProfileRel<'user_badges_user_id_fkey', 'user_id'>,
+          {
+            foreignKeyName: 'user_badges_badge_code_fkey';
+            columns: ['badge_code'];
+            isOneToOne: false;
+            referencedRelation: 'badges';
+            referencedColumns: ['code'];
+          },
+        ]
+      >;
+      title_tags: TableShape<
+        TitleTagRow,
+        [TitleRel<'title_tags_title_id_fkey'>, ProfileRel<'title_tags_user_id_fkey', 'user_id'>]
+      >;
+      person_follows: TableShape<PersonFollowRow, [ProfileRel<'person_follows_user_id_fkey', 'user_id'>]>;
     };
     Views: Record<string, never>;
     Functions: {
@@ -485,9 +718,31 @@ export type Database = {
           p_poster_path?: string | null;
           p_backdrop_path?: string | null;
           p_release_date?: string | null;
+          p_genre_ids?: number[] | null;
+          p_runtime_minutes?: number | null;
+          p_original_language?: string | null;
         };
         Returns: string;
       };
+      set_title_people: {
+        Args: { p_title_id: string; p_people: TitlePersonInput[] };
+        Returns: undefined;
+      };
+      get_user_stats: {
+        Args: { p_user_id: string; p_year?: number | null };
+        Returns: UserStats;
+      };
+      set_favourite_rank: {
+        Args: { p_title_id: string; p_rank: number | null };
+        Returns: undefined;
+      };
+      set_watch_goal: { Args: { p_year: number; p_goal: number }; Returns: undefined };
+      get_watch_challenge: {
+        Args: { p_user_id: string; p_year: number };
+        Returns: WatchChallenge;
+      };
+      get_user_badges: { Args: { p_user_id: string }; Returns: UserBadge[] };
+      duplicate_list: { Args: { p_list_id: string; p_name?: string | null }; Returns: string };
       log_title: {
         Args: {
           p_title_id: string;
@@ -510,11 +765,19 @@ export type Database = {
         };
         Returns: string;
       };
-      toggle_review_like: { Args: { p_review_id: string }; Returns: boolean };
+      toggle_review_like: { Args: { p_review_id: string }; Returns: ToggleLikeResult };
       get_activity_feed: {
         Args: { p_before?: string | null; p_limit?: number };
         Returns: FeedItem[];
       };
+      get_notifications: {
+        Args: { p_before?: string | null; p_limit?: number };
+        Returns: NotificationItem[];
+      };
+      get_unread_notification_count: { Args: Record<string, never>; Returns: number };
+      mark_notifications_read: { Args: { p_ids?: string[] | null }; Returns: undefined };
+      register_push_token: { Args: { p_token: string; p_platform: string }; Returns: undefined };
+      unregister_push_token: { Args: { p_token: string }; Returns: undefined };
       get_title_community_summary: {
         Args: { p_tmdb_id: number; p_media_type: MediaTypeRow };
         Returns: CommunitySummary;
@@ -563,6 +826,9 @@ export type Database = {
       list_visibility: ListVisibilityRow;
       activity_type: ActivityTypeRow;
       friend_status: FriendStatusRow;
+      comment_target: CommentTargetRow;
+      like_target: LikeTargetRow;
+      notification_type: NotificationTypeRow;
     };
     CompositeTypes: Record<string, never>;
   };

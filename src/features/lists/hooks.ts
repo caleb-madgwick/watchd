@@ -18,6 +18,8 @@ export interface ListSummary {
   description: string;
   visibility: ListVisibilityRow;
   itemCount: number;
+  likeCount: number;
+  likedByMe: boolean;
   updatedAt: string;
   ownerId: string;
   /** First few poster URLs for the card fan. */
@@ -39,6 +41,8 @@ function mapListRow(row: ListRow, previewPosters: string[] = []): ListSummary {
     description: row.description ?? '',
     visibility: row.visibility,
     itemCount: row.item_count,
+    likeCount: row.like_count,
+    likedByMe: false,
     updatedAt: row.updated_at,
     ownerId: row.user_id,
     previewPosters,
@@ -72,6 +76,7 @@ export function useUserLists(userId: string | undefined) {
 }
 
 export function useList(listId: string | undefined) {
+  const userId = useCurrentUserId();
   return useQuery({
     queryKey: queryKeys.list(listId ?? ''),
     enabled: !!listId && !!supabase,
@@ -83,8 +88,69 @@ export function useList(listId: string | undefined) {
         .eq('id', listId!)
         .maybeSingle();
       if (error) throw new Error(error.message);
-      return data ? mapListRow(data) : null;
+      if (!data) return null;
+      let likedByMe = false;
+      if (userId) {
+        const { data: like } = await supabase!
+          .from('content_likes')
+          .select('target_id')
+          .eq('user_id', userId)
+          .eq('target_type', 'list')
+          .eq('target_id', data.id)
+          .maybeSingle();
+        likedByMe = !!like;
+      }
+      return { ...mapListRow(data), likedByMe };
     },
+  });
+}
+
+/** Like/unlike a list (content_likes). */
+export function useToggleListLike(listId: string) {
+  const queryClient = useQueryClient();
+  const userId = useCurrentUserId();
+  return useMutation({
+    mutationFn: async (like: boolean) => {
+      if (!supabase || !userId) throw new Error('Not connected.');
+      if (like) {
+        const { error } = await supabase
+          .from('content_likes')
+          .insert({ user_id: userId, target_type: 'list', target_id: listId });
+        if (error && error.code !== '23505') throw new Error(error.message);
+      } else {
+        const { error } = await supabase
+          .from('content_likes')
+          .delete()
+          .eq('user_id', userId)
+          .eq('target_type', 'list')
+          .eq('target_id', listId);
+        if (error) throw new Error(error.message);
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.list(listId) }),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Could not update the like.'),
+  });
+}
+
+/** Copy any visible list into a new private list of your own, then open it. */
+export function useDuplicateList() {
+  const queryClient = useQueryClient();
+  const userId = useCurrentUserId();
+  return useMutation({
+    mutationFn: async (listId: string): Promise<string> => {
+      if (!supabase) throw new Error('Not connected.');
+      const { data, error } = await supabase.rpc('duplicate_list', { p_list_id: listId });
+      if (error) throw new Error(error.message);
+      return data as string;
+    },
+    onSuccess: (newId) => {
+      if (userId) queryClient.invalidateQueries({ queryKey: queryKeys.lists(userId) });
+      toast.success('Copied to your lists.');
+      router.push(`/list/${newId}`);
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Could not copy this list.'),
   });
 }
 

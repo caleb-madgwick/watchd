@@ -111,7 +111,9 @@ export function MarqueeHero({ titles }: { titles: TitleSummary[] }) {
   const listRef = useRef<FlatList<TitleSummary>>(null);
   const pausedRef = useRef(false);
   const indexRef = useRef(0);
-  indexRef.current = index;
+  useEffect(() => {
+    indexRef.current = index;
+  });
   const [phases] = useState<[Animated.Value, Animated.Value, Animated.Value]>(() => [
     new Animated.Value(1),
     new Animated.Value(0.4),

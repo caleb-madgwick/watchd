@@ -1,9 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase/client';
 import { posterUrl } from '@/lib/tmdb/images';
 import { useCurrentUserId } from '@/providers/AuthProvider';
+import { toast } from '@/stores/toastStore';
 import { mapProfileRow, type Profile } from '@/types/profile';
 import type { MediaType, TitleSummary } from '@/types/domain';
 import { yearFromDate } from '@/utils/titles';
@@ -54,9 +55,16 @@ export function useUserTitles(
         .from('user_title_status')
         .select('rating, watched_at, updated_at, is_favourite, titles!inner(*)')
         .eq('user_id', userId!)
-        .order('updated_at', { ascending: false })
         .limit(limit);
-      query = favouritesOnly ? query.eq('is_favourite', true) : query.eq('status', status);
+      if (favouritesOnly) {
+        // Pinned (ranked) favourites first, in slot order; then the rest.
+        query = query
+          .eq('is_favourite', true)
+          .order('favourite_rank', { ascending: true, nullsFirst: false })
+          .order('updated_at', { ascending: false });
+      } else {
+        query = query.eq('status', status).order('updated_at', { ascending: false });
+      }
       if (mediaType) query = query.eq('titles.media_type', mediaType);
 
       const { data, error } = await query;
@@ -200,5 +208,67 @@ export function useUserActivity(userId: string | undefined) {
       if (error) throw new Error(error.message);
       return data ?? [];
     },
+  });
+}
+
+export interface FavouriteEntry {
+  /** titles.id (uuid) — used to set the favourite rank. */
+  titleId: string;
+  rank: number | null;
+  title: TitleSummary;
+}
+
+/** All of a user's favourited titles, pinned (ranked) ones first. */
+export function useFavourites(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['favouritesFull', userId ?? ''],
+    enabled: !!userId && !!supabase,
+    staleTime: 30_000,
+    queryFn: async (): Promise<FavouriteEntry[]> => {
+      const { data, error } = await supabase!
+        .from('user_title_status')
+        .select('title_id, favourite_rank, titles!inner(*)')
+        .eq('user_id', userId!)
+        .eq('is_favourite', true)
+        .order('favourite_rank', { ascending: true, nullsFirst: false })
+        .order('updated_at', { ascending: false })
+        .limit(60);
+      if (error) throw new Error(error.message);
+      return (data ?? [])
+        .filter((row) => row.titles)
+        .map((row) => ({
+          titleId: row.title_id,
+          rank: row.favourite_rank,
+          title: {
+            tmdbId: row.titles!.tmdb_id,
+            mediaType: row.titles!.media_type,
+            title: row.titles!.title,
+            posterUrl: posterUrl(row.titles!.poster_path),
+            releaseYear: yearFromDate(row.titles!.release_date),
+          },
+        }));
+    },
+  });
+}
+
+/** Pin/unpin a favourite to a Top-4 slot (rank 1–4, or null to clear). */
+export function useSetFavouriteRank() {
+  const queryClient = useQueryClient();
+  const userId = useCurrentUserId();
+  return useMutation({
+    mutationFn: async ({ titleId, rank }: { titleId: string; rank: number | null }) => {
+      if (!supabase) throw new Error('Not connected.');
+      const { error } = await supabase.rpc('set_favourite_rank', {
+        p_title_id: titleId,
+        p_rank: rank,
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favouritesFull', userId ?? ''] });
+      queryClient.invalidateQueries({ queryKey: ['userTitles'] });
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Could not update favourites.'),
   });
 }

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
@@ -8,6 +8,7 @@ import { ErrorState } from '@/components/primitives/ErrorState';
 import { Modal } from '@/components/primitives/Modal';
 import { CardListSkeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
+import { CommentsSection } from '@/features/comments/CommentsSection';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
 import { ProfileSubpageShell } from '@/features/profile/ProfileSubpageShell';
 import { useDeleteReview, useReview, useToggleReviewLike } from '@/features/reviews/hooks';
@@ -46,7 +47,11 @@ export default function ReviewDetailScreen() {
   return (
     <ProfileSubpageShell title="Review">
       <Stack.Screen options={{ title: 'Review — Video Club' }} />
-      <View style={styles.page}>
+      <ScrollView
+        style={styles.page}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {review.isLoading ? (
           <CardListSkeleton count={1} />
         ) : review.isError ? (
@@ -124,9 +129,11 @@ export default function ReviewDetailScreen() {
                 style={styles.reportButton}
               />
             ) : null}
+
+            <CommentsSection targetType="review" targetId={review.data.id} />
           </View>
         )}
-      </View>
+      </ScrollView>
 
       {review.data ? (
         <Modal visible={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete review?">
@@ -186,7 +193,10 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: contentWidth.prose,
     alignSelf: 'center',
+  },
+  scrollContent: {
     padding: spacing.lg,
+    paddingBottom: spacing['6xl'],
   },
   content: {
     gap: spacing.lg,

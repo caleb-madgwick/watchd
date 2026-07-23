@@ -12,7 +12,7 @@ import { ResponsiveGrid } from '@/components/primitives/ResponsiveGrid';
 import { Screen } from '@/components/primitives/Screen';
 import { Skeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
-import { TmdbAttribution } from '@/components/TmdbAttribution';
+import { FollowPersonButton } from '@/features/social/FollowPersonButton';
 import { usePersonDetails } from '@/features/titles/hooks';
 import { useTheme } from '@/theme/ThemeContext';
 import { contentWidth, radius, spacing } from '@/theme/tokens';
@@ -96,6 +96,11 @@ export default function PersonDetailScreen() {
                   {person.data.knownForDepartment}
                 </Text>
               ) : null}
+              <FollowPersonButton
+                personTmdbId={person.data.id}
+                name={person.data.name}
+                knownForDepartment={person.data.knownForDepartment}
+              />
               {person.data.biography ? (
                 <View style={styles.bio}>
                   <Text variant="callout" color="secondary" numberOfLines={bioExpanded ? undefined : 4}>
@@ -116,7 +121,6 @@ export default function PersonDetailScreen() {
               </Text>
             </View>
           }
-          ListFooterComponent={<TmdbAttribution compact />}
           ListEmptyComponent={
             <Text variant="callout" color="muted" align="center">
               No credits available.
