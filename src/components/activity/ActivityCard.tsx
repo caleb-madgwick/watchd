@@ -12,30 +12,9 @@ import { posterUrl } from '@/lib/tmdb/images';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
 import type { FeedItem } from '@/types/database';
+import { activityVerb } from '@/utils/activity';
 import { timeAgo } from '@/utils/dates';
 import { titleHref, yearFromDate } from '@/utils/titles';
-
-function verbFor(item: FeedItem): string {
-  switch (item.activity_type) {
-    case 'logged': {
-      const parts: string[] = ['watched'];
-      if (item.metadata.rating) parts.push('rated');
-      if (item.metadata.has_review) parts.push('reviewed');
-      if (item.metadata.is_rewatch) return `re${parts.join(', ')}`;
-      return parts.length > 1
-        ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
-        : parts[0];
-    }
-    case 'tv_completed':
-      return 'finished';
-    case 'list_created':
-      return 'created a list';
-    case 'followed':
-      return 'followed';
-    default:
-      return 'updated';
-  }
-}
 
 /** One feed entry: combined verbs, title chip, review preview, timestamps. */
 export function ActivityCard({ item }: { item: FeedItem }) {
@@ -53,7 +32,7 @@ export function ActivityCard({ item }: { item: FeedItem }) {
               <Text variant="subhead" numberOfLines={2}>
                 {displayName}{' '}
                 <Text variant="subhead" color="muted">
-                  {verbFor(item)}
+                  {activityVerb(item)}
                 </Text>
                 {item.subject_user ? (
                   <Text variant="subhead" color="accent">
