@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { type Href } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { DvdCase } from './DvdCase';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
-import { aspect, radius, spacing } from '@/theme/tokens';
+import { spacing } from '@/theme/tokens';
 
 export interface PosterCardProps {
   title: string;
@@ -20,91 +21,55 @@ export interface PosterCardProps {
   subtitle?: string;
 }
 
-/** Tappable poster with title/metadata below — the core discovery unit. */
+/** A DVD case on the shelf — hover/press picks it up. The core discovery unit. */
 export function PosterCard({ title, posterUrl, year, href, width, rating, subtitle }: PosterCardProps) {
   const { colors } = useTheme();
-  const height = width / aspect.poster;
+  const [lifted, setLifted] = useState(false);
+  const [grabbed, setGrabbed] = useState(false);
 
   return (
     <LinkPressable
       href={href}
       accessibilityLabel={`${title}${year ? `, ${year}` : ''}`}
-      style={({ pressed, hovered }) => ({
-        width,
-        opacity: pressed ? 0.85 : 1,
-        // Rental-sleeve neon on hover (web); shadows are inert on native here.
-        ...(hovered
-          ? { shadowColor: colors.glow, shadowOpacity: 1, shadowRadius: 16, shadowOffset: { width: 0, height: 0 } }
-          : null),
-      })}
+      onHoverIn={() => setLifted(true)}
+      onHoverOut={() => setLifted(false)}
+      onPressIn={() => setGrabbed(true)}
+      onPressOut={() => setGrabbed(false)}
+      style={{ width }}
     >
-        {posterUrl ? (
-          <Image
-            source={{ uri: posterUrl }}
-            style={[styles.poster, { width, height, backgroundColor: colors.surfaceRaised }]}
-            contentFit="cover"
-            transition={200}
-            accessibilityLabel={`${title} poster`}
-          />
-        ) : (
-          <View
-            style={[
-              styles.poster,
-              styles.fallback,
-              { width, height, backgroundColor: colors.surfaceRaised, borderColor: colors.border },
-            ]}
-          >
-            <Ionicons name="film-outline" size={width * 0.22} color={colors.textMuted} />
-            <Text variant="caption" color="muted" align="center" numberOfLines={3} style={styles.fallbackTitle}>
-              {title}
+      <DvdCase posterUrl={posterUrl} title={title} width={width} lifted={lifted} pressed={grabbed} />
+      <View style={styles.meta}>
+        <Text variant="subhead" numberOfLines={1}>
+          {title}
+        </Text>
+        <View style={styles.metaRow}>
+          {year ? (
+            <Text variant="caption" color="muted">
+              {year}
             </Text>
-          </View>
-        )}
-        <View style={styles.meta}>
-          <Text variant="subhead" numberOfLines={1}>
-            {title}
-          </Text>
-          <View style={styles.metaRow}>
-            {year ? (
+          ) : null}
+          {subtitle ? (
+            <Text variant="caption" color="muted">
+              {subtitle}
+            </Text>
+          ) : null}
+          {rating !== undefined && rating > 0 ? (
+            <View style={styles.rating}>
+              <Ionicons name="star" size={10} color={colors.star} />
               <Text variant="caption" color="muted">
-                {year}
+                {rating.toFixed(1)}
               </Text>
-            ) : null}
-            {subtitle ? (
-              <Text variant="caption" color="muted">
-                {subtitle}
-              </Text>
-            ) : null}
-            {rating !== undefined && rating > 0 ? (
-              <View style={styles.rating}>
-                <Ionicons name="star" size={10} color={colors.star} />
-                <Text variant="caption" color="muted">
-                  {rating.toFixed(1)}
-                </Text>
-              </View>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
         </View>
+      </View>
     </LinkPressable>
   );
 }
 
 const styles = StyleSheet.create({
-  poster: {
-    borderRadius: radius.sm,
-  },
-  fallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: spacing.sm,
-    padding: spacing.sm,
-  },
-  fallbackTitle: {
-    paddingHorizontal: spacing.xs,
-  },
   meta: {
-    marginTop: spacing.sm,
+    marginTop: spacing.sm + 2,
     gap: 2,
   },
   metaRow: {

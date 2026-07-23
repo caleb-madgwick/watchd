@@ -1,14 +1,13 @@
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BackdropHero } from '@/components/media/BackdropHero';
+import { DvdCase } from '@/components/media/DvdCase';
 import { IconButton } from '@/components/primitives/IconButton';
 import { Text } from '@/components/primitives/Text';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { useTheme } from '@/theme/ThemeContext';
-import { aspect, radius, spacing } from '@/theme/tokens';
+import { aspect, spacing } from '@/theme/tokens';
 
 export interface TitleHeroProps {
   title: string;
@@ -19,9 +18,8 @@ export interface TitleHeroProps {
   metaParts: (string | undefined)[];
 }
 
-/** Cinematic page header: backdrop fading into the background, poster + headline. */
+/** Cinematic page header: backdrop fading into the background, DVD case + headline. */
 export function TitleHero({ title, tagline, backdropUrl, posterUrl, metaParts }: TitleHeroProps) {
-  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { isWide, width } = useBreakpoint();
 
@@ -34,21 +32,7 @@ export function TitleHero({ title, tagline, backdropUrl, posterUrl, metaParts }:
         <View style={[styles.headline, { paddingBottom: spacing.lg }]}>
           <View style={styles.headlineRow}>
             {posterUrl ? (
-              <Image
-                source={{ uri: posterUrl }}
-                style={[
-                  styles.poster,
-                  {
-                    width: posterWidth,
-                    height: posterWidth / aspect.poster,
-                    backgroundColor: colors.surfaceRaised,
-                    borderColor: colors.border,
-                  },
-                ]}
-                contentFit="cover"
-                transition={200}
-                accessibilityLabel={`${title} poster`}
-              />
+              <DvdCase posterUrl={posterUrl} title={title} width={posterWidth} />
             ) : null}
             <View style={styles.headlineText}>
               <Text variant={isWide ? 'display' : 'title1'} accessibilityRole="header">
@@ -88,10 +72,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: spacing.lg,
-  },
-  poster: {
-    borderRadius: radius.sm,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   headlineText: {
     flex: 1,
