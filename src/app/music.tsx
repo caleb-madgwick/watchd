@@ -5,17 +5,9 @@ import { MusicRow } from '@/components/media/MusicRow';
 import { Button } from '@/components/primitives/Button';
 import { Screen } from '@/components/primitives/Screen';
 import { Text } from '@/components/primitives/Text';
-import { MUSIC_GENRES, useFeaturedAlbums, useGenreAlbums } from '@/features/music/discovery';
+import { GENRE_SHELVES, useFeaturedAlbums } from '@/features/music/discovery';
 import { usePopularAlbums } from '@/features/music/library';
 import { contentWidth, spacing } from '@/theme/tokens';
-
-/** One genre shelf — self-contained so each owns its own query + skeleton. */
-function GenreRail({ label, tag }: { label: string; tag: string }) {
-  const genre = useGenreAlbums(tag);
-  // Hide a genre entirely if it resolved to nothing (keeps the page tidy).
-  if (!genre.isLoading && (!genre.data || genre.data.length === 0)) return null;
-  return <MusicRow heading={label} items={genre.data} loading={genre.isLoading} />;
-}
 
 export default function MusicScreen() {
   const popular = usePopularAlbums();
@@ -49,8 +41,8 @@ export default function MusicScreen() {
               items={topAlbums}
               loading={topLoading}
             />
-            {MUSIC_GENRES.map((genre) => (
-              <GenreRail key={genre.tag} label={genre.label} tag={genre.tag} />
+            {GENRE_SHELVES.map((shelf) => (
+              <MusicRow key={shelf.label} heading={shelf.label} items={shelf.albums} />
             ))}
           </View>
         </View>
