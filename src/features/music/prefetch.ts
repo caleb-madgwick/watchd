@@ -6,7 +6,10 @@ import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase/client';
 import type { AlbumSummary, SongSummary } from '@/types/domain';
 
-const PREFETCH_TIMEOUT_MS = 1600;
+// The record keeps spinning until this resolves, then the loaded page is
+// revealed — so we wait for the real fetch (MusicBrainz can be slow), with a
+// generous safety cap so a hung request can't spin forever.
+const PREFETCH_TIMEOUT_MS = 12_000;
 
 function withTimeout<T>(promise: Promise<T>): Promise<unknown> {
   return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, PREFETCH_TIMEOUT_MS))]);
