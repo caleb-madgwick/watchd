@@ -142,6 +142,16 @@ export default function HomeScreen() {
             </View>
           </View>
 
+          {/* On phones there's no sidebar, so surface the media hubs here. */}
+          {!isWide ? (
+            <View style={styles.browseRow}>
+              <Button title="Movies" icon="film-outline" variant="outline" size="sm" onPress={() => router.push('/movies')} />
+              <Button title="TV" icon="tv-outline" variant="outline" size="sm" onPress={() => router.push('/tv')} />
+              <Button title="Music" icon="disc-outline" variant="outline" size="sm" onPress={() => router.push('/music')} />
+              <Button title="Books" icon="book-outline" variant="outline" size="sm" onPress={() => router.push('/books')} />
+            </View>
+          ) : null}
+
           {config.demoMode ? (
             <View style={styles.demoBanner}>
               <Text variant="footnote" color="muted">
@@ -325,6 +335,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     marginTop: spacing.md,
+  },
+  browseRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
   },
   demoBanner: {
     marginHorizontal: spacing.lg,
