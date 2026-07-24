@@ -3,15 +3,21 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/primitives/Button';
 import { EmptyState } from '@/components/primitives/EmptyState';
+import { SegmentedControl } from '@/components/primitives/SegmentedControl';
 import { Text } from '@/components/primitives/Text';
 import { config } from '@/constants/config';
-import { useSetWatchGoal, useWatchChallenge } from '@/features/challenges/hooks';
+import { useSetWatchGoal, useWatchChallenge, type ChallengeKind } from '@/features/challenges/hooks';
 import { ProfileSubpageShell } from '@/features/profile/ProfileSubpageShell';
 import { useCurrentUserId } from '@/providers/AuthProvider';
 import { useTheme } from '@/theme/ThemeContext';
 import { contentWidth, radius, spacing } from '@/theme/tokens';
 
 const PRESETS = [12, 24, 52, 100];
+
+const KIND_COPY: Record<ChallengeKind, { noun: string; verbed: string }> = {
+  watch: { noun: 'films and shows', verbed: 'watched' },
+  read: { noun: 'books', verbed: 'read' },
+};
 
 function currentYear(): number {
   return new Date().getFullYear();
@@ -21,7 +27,8 @@ export default function ChallengeScreen() {
   const { colors } = useTheme();
   const userId = useCurrentUserId();
   const year = currentYear();
-  const challenge = useWatchChallenge(userId, year);
+  const [kind, setKind] = useState<ChallengeKind>('watch');
+  const challenge = useWatchChallenge(userId, year, kind);
   const setGoal = useSetWatchGoal();
 
   // Show the saved goal until the user edits it (no effect → no cascading render).
@@ -32,22 +39,35 @@ export default function ChallengeScreen() {
   const activeGoal = challenge.data?.goal ?? null;
   const completed = challenge.data?.completed ?? false;
   const pct = activeGoal ? Math.min(100, Math.round((watched / activeGoal) * 100)) : 0;
+  const copy = KIND_COPY[kind];
 
   if (config.demoMode || !userId) {
     return (
-      <ProfileSubpageShell title="Watch challenge">
+      <ProfileSubpageShell title="Challenges">
         <EmptyState
           icon="flag-outline"
           title="Sign in to set a challenge"
-          message="Set a yearly goal and track how many films and shows you watch."
+          message="Set a yearly goal and track how many films, shows and books you get through."
         />
       </ProfileSubpageShell>
     );
   }
 
   return (
-    <ProfileSubpageShell title="Watch challenge" subtitle={String(year)}>
+    <ProfileSubpageShell title="Challenges" subtitle={String(year)}>
       <View style={styles.page}>
+        <SegmentedControl
+          options={[
+            { value: 'watch' as ChallengeKind, label: 'Films & TV' },
+            { value: 'read' as ChallengeKind, label: 'Books' },
+          ]}
+          value={kind}
+          onChange={(k) => {
+            setKind(k);
+            setDraft(null);
+          }}
+        />
+
         {activeGoal ? (
           <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <Text variant="display" style={{ color: colors.accent }}>
@@ -57,7 +77,7 @@ export default function ChallengeScreen() {
               </Text>
             </Text>
             <Text variant="subhead" color="muted">
-              {completed ? `Challenge complete! 🎉` : `watched in ${year}`}
+              {completed ? `Challenge complete! 🎉` : `${copy.verbed} in ${year}`}
             </Text>
             <View style={[styles.track, { backgroundColor: colors.surfaceRaised }]}>
               <View style={[styles.fill, { width: `${pct}%`, backgroundColor: colors.accent }]} />
@@ -68,7 +88,7 @@ export default function ChallengeScreen() {
           </View>
         ) : (
           <Text variant="subhead" color="muted" style={styles.lede}>
-            Set a goal for how many films and shows you want to watch in {year}.
+            Set a goal for how many {copy.noun} you want to get through in {year}.
           </Text>
         )}
 
@@ -122,7 +142,7 @@ export default function ChallengeScreen() {
         <Button
           title={activeGoal === goal ? 'Goal saved' : 'Save goal'}
           disabled={setGoal.isPending || activeGoal === goal}
-          onPress={() => setGoal.mutate({ year, goal })}
+          onPress={() => setGoal.mutate({ year, goal, kind })}
           style={styles.save}
         />
       </View>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Disc } from '@/components/media/Disc';
+import { Record } from '@/components/media/Record';
 import { Text } from '@/components/primitives/Text';
 import { useDiscTransition, type DiscTransitionRequest } from '@/stores/discTransitionStore';
 import { fontFamily, palette } from '@/theme/tokens';
@@ -24,13 +25,14 @@ function delay(ms: number) {
 function Overlay({ request, onDone }: { request: DiscTransitionRequest; onDone: () => void }) {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const [progress] = useState(() => new Animated.Value(0));
-  // Starts at 24° — the angle the disc rests at inside the open case — so the
-  // hand-off from tray disc to flying disc is seamless.
-  const [spin] = useState(() => new Animated.Value(24 / 360));
+  // Starts at the angle the medium rests at in its case (24° for a DVD in an
+  // open tray; ~0 for a record in its sleeve) so the hand-off is seamless.
+  const [spin] = useState(() => new Animated.Value(request.variant === 'vinyl' ? 0 : 24 / 360));
   const [exit] = useState(() => new Animated.Value(0));
 
+  const isVinyl = request.variant === 'vinyl';
   const discSize = Math.min(Math.min(screenW, screenH) * 0.55, 340);
-  // origin is the tray disc's rect — the overlay disc spawns exactly over it.
+  // origin is the tray disc's / record's rect — the overlay spawns over it.
   const originCenterX = request.origin.x + request.origin.width / 2;
   const originCenterY = request.origin.y + request.origin.height / 2;
   const deltaX = originCenterX - screenW / 2;
@@ -135,11 +137,20 @@ function Overlay({ request, onDone }: { request: DiscTransitionRequest; onDone: 
             ],
           }}
         >
-          <Disc
-            posterUrl={request.title.posterUrl}
-            size={discSize}
-            rotate={spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] })}
-          />
+          {isVinyl ? (
+            <Record
+              posterUrl={request.art}
+              size={discSize}
+              rotate={spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] })}
+              labelColor={palette.marigold400}
+            />
+          ) : (
+            <Disc
+              posterUrl={request.art}
+              size={discSize}
+              rotate={spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] })}
+            />
+          )}
         </Animated.View>
 
         <Animated.View
@@ -169,7 +180,7 @@ function Overlay({ request, onDone }: { request: DiscTransitionRequest; onDone: 
               letterSpacing: 1,
             }}
           >
-            {request.title.title.toUpperCase()}
+            {request.label.toUpperCase()}
           </Text>
         </Animated.View>
       </View>

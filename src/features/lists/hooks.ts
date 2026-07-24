@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 
-import { ensureTitleReference } from '@/features/tracking/api';
+import { ensureReference, type TrackableMedia } from '@/features/tracking/api';
 import { track } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase/client';
@@ -11,6 +11,12 @@ import { toast } from '@/stores/toastStore';
 import type { ListRow, ListVisibilityRow } from '@/types/database';
 import type { TitleSummary } from '@/types/domain';
 import { yearFromDate } from '@/utils/titles';
+
+/** Stable id for list-membership keys: MBID for music, volumeId for books, tmdbId otherwise. */
+function mediaId(item: TrackableMedia): string | number {
+  if ('musicBrainzId' in item) return item.musicBrainzId;
+  return 'volumeId' in item ? item.volumeId : item.tmdbId;
+}
 
 export interface ListSummary {
   id: string;
@@ -32,6 +38,10 @@ export interface ListItemEntry {
   note: string | null;
   addedAt: string;
   title: TitleSummary;
+  /** Google Books volume id when this item is a book (routes to /book/[id]). */
+  volumeId?: string;
+  /** MusicBrainz MBID when this item is an album/song (routes to /album|/song). */
+  musicBrainzId?: string;
 }
 
 function mapListRow(row: ListRow, previewPosters: string[] = []): ListSummary {
@@ -169,40 +179,53 @@ export function useListItems(listId: string | undefined) {
       if (error) throw new Error(error.message);
       return (data ?? [])
         .filter((row) => row.titles)
-        .map((row) => ({
-          id: row.id,
-          position: row.position,
-          note: row.note,
-          addedAt: row.created_at,
-          title: {
-            tmdbId: row.titles!.tmdb_id,
-            mediaType: row.titles!.media_type,
-            title: row.titles!.title,
-            posterUrl: posterUrl(row.titles!.poster_path),
-            posterPath: row.titles!.poster_path ?? undefined,
-            releaseYear: yearFromDate(row.titles!.release_date),
-            releaseDate: row.titles!.release_date ?? undefined,
-          },
-        }));
+        .map((row) => {
+          const t = row.titles!;
+          const isBook = t.media_type === 'book';
+          const isMusic = t.media_type === 'album' || t.media_type === 'artist' || t.media_type === 'song';
+          return {
+            id: row.id,
+            position: row.position,
+            note: row.note,
+            addedAt: row.created_at,
+            volumeId: isBook ? (t.external_id ?? undefined) : undefined,
+            musicBrainzId: isMusic ? (t.external_id ?? undefined) : undefined,
+            title: {
+              tmdbId: t.tmdb_id ?? 0,
+              mediaType: t.media_type,
+              title: t.title,
+              posterUrl: isBook || isMusic ? (t.cover_url ?? undefined) : posterUrl(t.poster_path),
+              posterPath: t.poster_path ?? undefined,
+              releaseYear: yearFromDate(t.release_date),
+              releaseDate: t.release_date ?? undefined,
+            },
+          };
+        });
     },
   });
 }
 
-/** Which of my lists already contain a given title (add-to-list sheet). */
-export function useListMembership(title: Pick<TitleSummary, 'tmdbId' | 'mediaType'> | undefined) {
+/** Which of my lists already contain a given title/book (add-to-list sheet). */
+export function useListMembership(item: TrackableMedia | undefined) {
   const userId = useCurrentUserId();
   return useQuery({
-    queryKey: queryKeys.listMembership(userId ?? 'anon', title?.mediaType ?? 'movie', title?.tmdbId ?? 0),
-    enabled: !!userId && !!title && !!supabase,
+    queryKey: queryKeys.listMembership(userId ?? 'anon', item?.mediaType ?? 'movie', item ? mediaId(item) : 0),
+    enabled: !!userId && !!item && !!supabase,
     staleTime: 15_000,
     queryFn: async (): Promise<Set<string>> => {
+      if (!item) return new Set();
       const client = supabase!;
-      const { data: titleRow, error: titleError } = await client
-        .from('titles')
-        .select('id')
-        .eq('tmdb_id', title!.tmdbId)
-        .eq('media_type', title!.mediaType)
-        .maybeSingle();
+      const base = client.from('titles').select('id');
+      const filtered =
+        'musicBrainzId' in item
+          ? base
+              .eq('external_id', item.musicBrainzId)
+              .eq('media_type', item.mediaType)
+              .eq('source', 'musicbrainz')
+          : 'volumeId' in item
+            ? base.eq('external_id', item.volumeId).eq('media_type', 'book')
+            : base.eq('tmdb_id', item.tmdbId).eq('media_type', item.mediaType);
+      const { data: titleRow, error: titleError } = await filtered.maybeSingle();
       if (titleError) throw new Error(titleError.message);
       if (!titleRow) return new Set();
       const { data, error } = await client
@@ -303,9 +326,9 @@ export function useAddToList() {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   return useMutation({
-    mutationFn: async ({ listId, title }: { listId: string; title: TitleSummary }) => {
+    mutationFn: async ({ listId, title }: { listId: string; title: TrackableMedia }) => {
       if (!supabase || !userId) throw new Error('Not signed in.');
-      const titleId = await ensureTitleReference(title);
+      const titleId = await ensureReference(title);
       const { data: maxRow, error: maxError } = await supabase
         .from('list_items')
         .select('position')
@@ -325,7 +348,7 @@ export function useAddToList() {
       queryClient.invalidateQueries({ queryKey: queryKeys.listItems(listId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.lists(userId ?? '') });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.listMembership(userId ?? 'anon', title.mediaType, title.tmdbId),
+        queryKey: queryKeys.listMembership(userId ?? 'anon', title.mediaType, mediaId(title)),
       });
     },
     onError: (error) =>

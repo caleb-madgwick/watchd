@@ -1,11 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BookCard } from '@/components/media/BookCard';
+import { MusicCard } from '@/components/media/MusicCard';
 import { TitleCard } from '@/components/media/TitleCard';
 import { EmptyState } from '@/components/primitives/EmptyState';
 import { ErrorState } from '@/components/primitives/ErrorState';
+import { ResponsiveGrid } from '@/components/primitives/ResponsiveGrid';
 import { Screen } from '@/components/primitives/Screen';
 import { SearchInput } from '@/components/primitives/SearchInput';
 import { SegmentedControl } from '@/components/primitives/SegmentedControl';
@@ -13,40 +23,68 @@ import { CardListSkeleton } from '@/components/primitives/Skeleton';
 import { Text } from '@/components/primitives/Text';
 import { UserCard } from '@/components/profiles/UserCard';
 import { config } from '@/constants/config';
+import { useBookSearch } from '@/features/books/hooks';
+import { useAlbumSearch, useArtistSearch, useSongSearch } from '@/features/music/hooks';
+import { bookKey } from '@/lib/books/normalize';
 import { useTitleSearch, useUserSearch, type SearchScope } from '@/features/search/hooks';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { track } from '@/lib/analytics';
 import { useRecentSearches } from '@/stores/recentSearchesStore';
 import { useTheme } from '@/theme/ThemeContext';
 import { contentWidth, spacing } from '@/theme/tokens';
-import type { TitleSummary } from '@/types/domain';
-import { mediaTypeLabel, titleHref } from '@/utils/titles';
+import type { AlbumSummary, SongSummary, TitleSummary } from '@/types/domain';
+import { artistHref, mediaTypeLabel, titleHref } from '@/utils/titles';
 
-type Scope = SearchScope | 'user';
+type Scope = SearchScope | 'user' | 'book';
 
 const SCOPES: { value: Scope; label: string }[] = [
   { value: 'all', label: 'All' },
   { value: 'movie', label: 'Movies' },
   { value: 'tv', label: 'TV' },
+  { value: 'book', label: 'Books' },
+  { value: 'album', label: 'Albums' },
+  { value: 'artist', label: 'Artists' },
+  { value: 'song', label: 'Songs' },
   { value: 'user', label: 'People' },
 ];
 
 export default function SearchScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const [input, setInput] = useState('');
   const [scope, setScope] = useState<Scope>('all');
   const query = useDebouncedValue(input, 350);
   const recents = useRecentSearches();
 
-  const titleScope: SearchScope = scope === 'user' ? 'all' : scope;
-  const titleSearch = useTitleSearch(titleScope, scope === 'user' ? '' : query);
+  const titleActive = scope === 'all' || scope === 'movie' || scope === 'tv';
+  const titleScope: SearchScope = scope === 'movie' || scope === 'tv' ? scope : 'all';
+  const titleSearch = useTitleSearch(titleScope, titleActive ? query : '');
   const userSearch = useUserSearch(scope === 'user' || scope === 'all' ? query : '');
+  const bookSearch = useBookSearch(scope === 'book' ? query : '');
+  const albumSearch = useAlbumSearch(query, scope === 'album');
+  const artistSearch = useArtistSearch(query, scope === 'artist');
+  const songSearch = useSongSearch(query, scope === 'song');
 
   const showingResults = query.trim().length >= 2;
-  const titles: TitleSummary[] =
-    scope === 'user' ? [] : (titleSearch.data?.pages.flatMap((page) => page.results) ?? []);
+  const titles: TitleSummary[] = titleActive
+    ? (titleSearch.data?.pages.flatMap((page) => page.results) ?? [])
+    : [];
+  const seenBookKeys = new Set<string>();
+  const books =
+    scope === 'book'
+      ? (bookSearch.data?.pages.flatMap((page) => page.results) ?? []).filter((b) => {
+          const k = bookKey(b);
+          if (seenBookKeys.has(k)) return false;
+          seenBookKeys.add(k);
+          return true;
+        })
+      : [];
   const users = scope === 'user' || scope === 'all' ? (userSearch.data ?? []) : [];
+  const albums = scope === 'album' ? (albumSearch.data?.pages.flatMap((page) => page.results) ?? []) : [];
+  const artists = scope === 'artist' ? (artistSearch.data?.pages.flatMap((page) => page.results) ?? []) : [];
+  const songs = scope === 'song' ? (songSearch.data?.pages.flatMap((page) => page.results) ?? []) : [];
+  const musicGridItems: (AlbumSummary | SongSummary)[] = scope === 'album' ? albums : songs;
 
   const commitSearch = () => {
     if (input.trim().length >= 2) {
@@ -56,13 +94,33 @@ export default function SearchScreen() {
   };
 
   const isLoading =
-    (scope !== 'user' && titleSearch.isLoading) || (scope === 'user' && userSearch.isLoading);
-  const isError = scope === 'user' ? userSearch.isError : titleSearch.isError;
+    (titleActive && titleSearch.isLoading) ||
+    (scope === 'user' && userSearch.isLoading) ||
+    (scope === 'book' && bookSearch.isLoading) ||
+    (scope === 'album' && albumSearch.isLoading) ||
+    (scope === 'artist' && artistSearch.isLoading) ||
+    (scope === 'song' && songSearch.isLoading);
+  const isError =
+    scope === 'book'
+      ? bookSearch.isError
+      : scope === 'album'
+        ? albumSearch.isError
+        : scope === 'artist'
+          ? artistSearch.isError
+          : scope === 'song'
+            ? songSearch.isError
+            : scope === 'user'
+              ? userSearch.isError
+              : titleSearch.isError;
   const isEmpty =
     showingResults &&
     !isLoading &&
     !isError &&
     titles.length === 0 &&
+    books.length === 0 &&
+    albums.length === 0 &&
+    artists.length === 0 &&
+    songs.length === 0 &&
     (scope === 'all' || scope === 'user' ? users.length === 0 : true);
 
   return (
@@ -78,7 +136,7 @@ export default function SearchScreen() {
             autoFocus={false}
           />
           <View style={styles.scopes}>
-            <SegmentedControl options={SCOPES} value={scope} onChange={setScope} />
+            <SegmentedControl options={SCOPES} value={scope} onChange={setScope} scrollable />
           </View>
         </View>
 
@@ -136,13 +194,83 @@ export default function SearchScreen() {
           <ErrorState
             title="Search failed"
             message="Something went wrong reaching the catalogue. Try again."
-            onRetry={() => (scope === 'user' ? userSearch.refetch() : titleSearch.refetch())}
+            onRetry={() =>
+              scope === 'book'
+                ? bookSearch.refetch()
+                : scope === 'album'
+                  ? albumSearch.refetch()
+                  : scope === 'artist'
+                    ? artistSearch.refetch()
+                    : scope === 'song'
+                      ? songSearch.refetch()
+                      : scope === 'user'
+                        ? userSearch.refetch()
+                        : titleSearch.refetch()
+            }
           />
         ) : isEmpty ? (
           <EmptyState
             icon="telescope-outline"
             title={`No results for “${query.trim()}”`}
             message="Try a different spelling or a broader search."
+          />
+        ) : scope === 'book' ? (
+          <ResponsiveGrid
+            containerWidth={Math.min(width, contentWidth.page)}
+            data={books}
+            keyExtractor={(b) => `book-${b.volumeId}`}
+            minItemWidth={112}
+            renderItem={(b, itemWidth) => <BookCard book={b} width={itemWidth} />}
+            onEndReached={() => {
+              if (bookSearch.hasNextPage && !bookSearch.isFetchingNextPage) bookSearch.fetchNextPage();
+            }}
+            ListFooterComponent={
+              bookSearch.isFetchingNextPage ? (
+                <ActivityIndicator color={colors.accent} style={styles.footerSpinner} />
+              ) : null
+            }
+          />
+        ) : scope === 'album' || scope === 'song' ? (
+          <ResponsiveGrid
+            containerWidth={Math.min(width, contentWidth.page)}
+            data={musicGridItems}
+            keyExtractor={(item) => `${item.mediaType}-${item.musicBrainzId}`}
+            minItemWidth={132}
+            renderItem={(item, itemWidth) => <MusicCard item={item} width={itemWidth} />}
+            onEndReached={() => {
+              const q = scope === 'album' ? albumSearch : songSearch;
+              if (q.hasNextPage && !q.isFetchingNextPage) q.fetchNextPage();
+            }}
+            ListFooterComponent={
+              (scope === 'album' ? albumSearch : songSearch).isFetchingNextPage ? (
+                <ActivityIndicator color={colors.accent} style={styles.footerSpinner} />
+              ) : null
+            }
+          />
+        ) : scope === 'artist' ? (
+          <FlatList
+            data={artists}
+            keyExtractor={(item) => `artist-${item.musicBrainzId}`}
+            keyboardShouldPersistTaps="handled"
+            onEndReached={() => {
+              if (artistSearch.hasNextPage && !artistSearch.isFetchingNextPage) artistSearch.fetchNextPage();
+            }}
+            onEndReachedThreshold={0.4}
+            renderItem={({ item }) => (
+              <TitleCard
+                title={item.name}
+                mediaTypeLabel={mediaTypeLabel('artist')}
+                overview={item.disambiguation}
+                href={artistHref(item.musicBrainzId)}
+              />
+            )}
+            ListFooterComponent={
+              artistSearch.isFetchingNextPage ? (
+                <ActivityIndicator color={colors.accent} style={styles.footerSpinner} />
+              ) : null
+            }
+            contentContainerStyle={styles.results}
+            showsVerticalScrollIndicator={false}
           />
         ) : (
           <FlatList

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { ensureTitleReference } from '@/features/tracking/api';
+import { ensureReference, type TrackableMedia } from '@/features/tracking/api';
 import { track } from '@/lib/analytics';
 import { queryKeys } from '@/lib/queryKeys';
 import { supabase } from '@/lib/supabase/client';
@@ -11,7 +11,6 @@ import type {
   SharedWatchlistInvitePayload,
   SharedWatchlistsResult,
 } from '@/types/database';
-import type { TitleSummary } from '@/types/domain';
 
 /** Shared watchlists the signed-in user belongs to (+ pending invite count). */
 export function useSharedWatchlists() {
@@ -135,9 +134,9 @@ export function useRespondSharedInvite() {
 export function useAddToSharedWatchlist() {
   const invalidate = useInvalidateShared();
   return useMutation({
-    mutationFn: async ({ listId, title }: { listId: string; title: TitleSummary }) => {
+    mutationFn: async ({ listId, title }: { listId: string; title: TrackableMedia }) => {
       if (!supabase) throw new Error('Not signed in.');
-      const titleId = await ensureTitleReference(title);
+      const titleId = await ensureReference(title);
       const { error } = await supabase.rpc('add_shared_watchlist_item', {
         p_list: listId,
         p_title_id: titleId,

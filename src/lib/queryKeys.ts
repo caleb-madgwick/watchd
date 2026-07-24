@@ -17,6 +17,30 @@ export const queryKeys = {
   season: (tvId: number, seasonNumber: number) => ['tmdb', 'season', tvId, seasonNumber] as const,
   person: (personId: number) => ['tmdb', 'person', personId] as const,
 
+  // Books (Google Books + Open Library)
+  bookSearch: (query: string) => ['books', 'search', query] as const,
+  bookDetails: (volumeId: string) => ['books', 'details', volumeId] as const,
+  bookCommunitySummary: (volumeId: string) => ['books', 'community', volumeId] as const,
+  bookProgress: (userId: string, volumeId: string) => ['bookProgress', userId, volumeId] as const,
+  bookStatus: (userId: string, volumeId: string) => ['bookStatus', userId, volumeId] as const,
+
+  // Music (MusicBrainz + Cover Art Archive)
+  musicSearch: (kind: string, query: string) => ['music', 'search', kind, query] as const,
+  albumDetails: (mbid: string) => ['music', 'album', mbid] as const,
+  artistDetails: (mbid: string) => ['music', 'artist', mbid] as const,
+  songDetails: (mbid: string) => ['music', 'song', mbid] as const,
+  musicCommunitySummary: (mediaType: MediaType, mbid: string) =>
+    ['music', 'community', mediaType, mbid] as const,
+  musicReviews: (mediaType: MediaType, mbid: string) => ['musicReviews', mediaType, mbid] as const,
+  musicStatus: (userId: string, mediaType: MediaType, mbid: string) =>
+    ['musicStatus', userId, mediaType, mbid] as const,
+  userMusicStats: (userId: string) => ['userMusicStats', userId] as const,
+  listenBacklog: (userId: string) => ['listenBacklog', userId] as const,
+  listenedAlbums: (userId: string) => ['listenedAlbums', userId] as const,
+  favouriteAlbums: (userId: string) => ['favouriteAlbums', userId] as const,
+  favouriteSongs: (userId: string) => ['favouriteSongs', userId] as const,
+  popularAlbums: () => ['music', 'popularAlbums'] as const,
+
   // Supabase (app data)
   profile: (username: string) => ['profile', username.toLowerCase()] as const,
   profileById: (userId: string) => ['profileById', userId] as const,
@@ -51,13 +75,14 @@ export const queryKeys = {
   lists: (userId: string) => ['lists', userId] as const,
   list: (listId: string) => ['list', listId] as const,
   listItems: (listId: string) => ['listItems', listId] as const,
-  listMembership: (userId: string, mediaType: MediaType, tmdbId: number) =>
-    ['listMembership', userId, mediaType, tmdbId] as const,
+  listMembership: (userId: string, mediaType: MediaType, id: string | number) =>
+    ['listMembership', userId, mediaType, id] as const,
   favourites: (userId: string) => ['favourites', userId] as const,
   userActivity: (userId: string) => ['userActivity', userId] as const,
   userStats: (userId: string, year: number | null) =>
     ['userStats', userId, year ?? 'all'] as const,
-  watchChallenge: (userId: string, year: number) => ['watchChallenge', userId, year] as const,
+  watchChallenge: (userId: string, year: number, kind: string) =>
+    ['watchChallenge', userId, year, kind] as const,
   userBadges: (userId: string) => ['userBadges', userId] as const,
   comments: (targetType: string, targetId: string) => ['comments', targetType, targetId] as const,
   blockedUsers: () => ['blockedUsers'] as const,

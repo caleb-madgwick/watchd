@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BookRow } from '@/components/media/BookRow';
 import { MediaRow } from '@/components/media/MediaRow';
+import { MusicRow } from '@/components/media/MusicRow';
 import { PosterCard } from '@/components/media/PosterCard';
 import { ReelScroller } from '@/components/primitives/ReelScroller';
 import { Button } from '@/components/primitives/Button';
@@ -24,11 +26,14 @@ import {
   useRecentReviewsFromFollows,
   useTrending,
 } from '@/features/discovery/hooks';
+import { usePopularBooks } from '@/features/books/hooks';
+import { useFeaturedAlbums } from '@/features/music/discovery';
+import { useFavouriteSongs, useListenBacklog, usePopularAlbums } from '@/features/music/library';
 import { useWatchlist } from '@/features/tracking/queries';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { supabase } from '@/lib/supabase/client';
 import { posterUrl } from '@/lib/tmdb/images';
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth, useCurrentUserId } from '@/providers/AuthProvider';
 import { aspect, contentWidth, spacing } from '@/theme/tokens';
 import type { TitleSummary } from '@/types/domain';
 import { titleHref, yearFromDate } from '@/utils/titles';
@@ -94,6 +99,14 @@ export default function HomeScreen() {
   const watchlist = useWatchlist();
   const followedReviews = useRecentReviewsFromFollows();
   const suggestions = useGenreSuggestions(profile?.favouriteGenres ?? []);
+  const userId = useCurrentUserId();
+  const popularAlbums = usePopularAlbums();
+  const featuredAlbums = useFeaturedAlbums();
+  const listenBacklog = useListenBacklog(userId ?? undefined);
+  const favouriteSongs = useFavouriteSongs(userId ?? undefined);
+  // Community-popular albums once there are any; a curated shelf until then.
+  const albumsRail = popularAlbums.data?.length ? popularAlbums.data : (featuredAlbums.data ?? []);
+  const popularBooks = usePopularBooks('fiction');
 
   const firstName = profile?.displayName.split(' ')[0];
   const everythingFailed = trendingMovies.isError && trendingTv.isError;
@@ -243,6 +256,22 @@ export default function HomeScreen() {
 
               {communityPopular.data && communityPopular.data.length > 0 ? (
                 <MediaRow heading="Popular with the community" titles={communityPopular.data} />
+              ) : null}
+
+              {albumsRail.length > 0 ? (
+                <MusicRow heading="Popular albums" items={albumsRail} seeAllHref="/music" />
+              ) : null}
+
+              {listenBacklog.data && listenBacklog.data.length > 0 ? (
+                <MusicRow heading="Your listen backlog" items={listenBacklog.data} />
+              ) : null}
+
+              {favouriteSongs.data && favouriteSongs.data.length > 0 ? (
+                <MusicRow heading="Recently favourited songs" items={favouriteSongs.data} />
+              ) : null}
+
+              {popularBooks.data && popularBooks.data.length > 0 ? (
+                <BookRow heading="Popular books" items={popularBooks.data} seeAllHref="/books" />
               ) : null}
 
               {profile && profile.favouriteGenres.length > 0 ? (

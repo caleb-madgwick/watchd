@@ -4,7 +4,22 @@ import type {
   UserTitleStatusRow,
   WatchStatusRow,
 } from '@/types/database';
-import type { TitleSummary, WatchStatus } from '@/types/domain';
+import type {
+  AlbumSummary,
+  BookDetails,
+  BookSummary,
+  MusicSummary,
+  SongSummary,
+  TitleSummary,
+  WatchStatus,
+} from '@/types/domain';
+
+/**
+ * Anything trackable: a TMDB title (movie/tv), a Google Books volume, or a music
+ * album/song. Artists are catalogue-only (not rated or listed), so they are not
+ * part of this union — every member has a `.title`.
+ */
+export type TrackableMedia = TitleSummary | BookSummary | AlbumSummary | SongSummary;
 
 /**
  * Ensures a local reference row exists for a TMDB title and returns its uuid.
@@ -26,6 +41,53 @@ export async function ensureTitleReference(title: TitleSummary): Promise<string>
   return data as string;
 }
 
+/** The book equivalent of ensureTitleReference — upserts a Google Books volume. */
+export async function ensureBookReference(book: BookSummary): Promise<string> {
+  const supabase = requireSupabase();
+  const details = book as Partial<BookDetails>;
+  const { data, error } = await supabase.rpc('upsert_book_reference', {
+    p_volume_id: book.volumeId,
+    p_title: book.title,
+    p_authors: book.authors,
+    p_cover_url: book.coverUrl ?? null,
+    p_categories: details.categories ?? [],
+    p_page_count: details.pageCount ?? null,
+    p_published_date: book.publishedDate ?? null,
+    p_isbn13: book.isbn13 ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+/** The music equivalent — upserts a MusicBrainz artist/album/song reference. */
+export async function ensureMusicReference(item: MusicSummary): Promise<string> {
+  const supabase = requireSupabase();
+  const title = item.mediaType === 'artist' ? item.name : item.title;
+  const subtitle =
+    item.mediaType === 'artist'
+      ? (item.disambiguation ?? null)
+      : (item.artistCredit ?? (item.artistNames.length > 0 ? item.artistNames.join(', ') : null));
+  const coverUrl = item.mediaType === 'artist' ? (item.imageUrl ?? null) : (item.coverUrl ?? null);
+  const releaseDate = item.mediaType === 'album' ? (item.releaseDate ?? null) : null;
+
+  const { data, error } = await supabase.rpc('upsert_music_reference', {
+    p_mbid: item.musicBrainzId,
+    p_media_type: item.mediaType,
+    p_title: title,
+    p_subtitle: subtitle,
+    p_cover_url: coverUrl,
+    p_release_date: releaseDate,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+/** Resolve any trackable to its titles.id (uuid): music vs book vs movie/tv. */
+export async function ensureReference(item: TrackableMedia): Promise<string> {
+  if ('musicBrainzId' in item) return ensureMusicReference(item);
+  return 'volumeId' in item ? ensureBookReference(item) : ensureTitleReference(item);
+}
+
 export async function fetchTitleStatus(
   userId: string,
   title: Pick<TitleSummary, 'tmdbId' | 'mediaType'>,
@@ -45,11 +107,11 @@ export async function fetchTitleStatus(
 /** Quiet status change (watchlist toggle etc.) — no feed activity is created. */
 export async function setTitleStatus(
   userId: string,
-  title: TitleSummary,
+  title: TrackableMedia,
   status: WatchStatus | null,
 ): Promise<void> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(title);
+  const titleId = await ensureReference(title);
   if (status === null) {
     const { error } = await supabase
       .from('user_title_status')
@@ -74,11 +136,11 @@ export async function setTitleStatus(
 /** Quiet rating change from the title page (no review, no diary, no activity). */
 export async function setTitleRating(
   userId: string,
-  title: TitleSummary,
+  title: TrackableMedia,
   rating: number | null,
 ): Promise<void> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(title);
+  const titleId = await ensureReference(title);
   const { data: existing, error: readError } = await supabase
     .from('user_title_status')
     .select('id, status')
@@ -101,7 +163,7 @@ export async function setTitleRating(
 }
 
 export interface LogTitleInput {
-  title: TitleSummary;
+  title: TrackableMedia;
   status?: WatchStatus;
   rating?: number;
   watchedAt?: string;
@@ -117,7 +179,7 @@ export interface LogTitleInput {
  */
 export async function logTitle(input: LogTitleInput): Promise<LogTitleResult> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(input.title);
+  const titleId = await ensureReference(input.title);
   const { data, error } = await supabase.rpc('log_title', {
     p_title_id: titleId,
     p_status: (input.status ?? null) as WatchStatusRow | null,
@@ -139,7 +201,7 @@ export async function rateInitialTitle(
   rating: number,
 ): Promise<void> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(title);
+  const titleId = await ensureReference(title);
   const { error } = await supabase.from('user_title_status').upsert(
     {
       user_id: userId,
@@ -154,11 +216,11 @@ export async function rateInitialTitle(
 
 export async function setFavourite(
   userId: string,
-  title: TitleSummary,
+  title: TrackableMedia,
   isFavourite: boolean,
 ): Promise<void> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(title);
+  const titleId = await ensureReference(title);
   const { error } = await supabase.from('user_title_status').upsert(
     { user_id: userId, title_id: titleId, is_favourite: isFavourite },
     { onConflict: 'user_id,title_id' },
@@ -173,7 +235,7 @@ export async function updateTvProgress(
   completed: boolean,
 ): Promise<void> {
   const supabase = requireSupabase();
-  const titleId = await ensureTitleReference(title);
+  const titleId = await ensureReference(title);
   const { error } = await supabase.rpc('set_tv_progress', {
     p_title_id: titleId,
     p_season_number: seasonNumber,

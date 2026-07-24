@@ -11,14 +11,14 @@ import { useCurrentUserId } from '@/providers/AuthProvider';
 import { toast } from '@/stores/toastStore';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
-import type { TitleSummary } from '@/types/domain';
+import type { TrackableMedia } from '@/features/tracking/api';
 
 export function AddToListSheet({
   title,
   visible,
   onClose,
 }: {
-  title: TitleSummary;
+  title: TrackableMedia;
   visible: boolean;
   onClose: () => void;
 }) {
@@ -30,12 +30,13 @@ export function AddToListSheet({
   const sharedWatchlists = useSharedWatchlists();
   const addToShared = useAddToSharedWatchlist();
   const shared = sharedWatchlists.data?.watchlists ?? [];
+  const displayName = title.title;
 
   return (
     <Modal visible={visible} onClose={onClose} title="Add to list">
       <View style={styles.body}>
         <Text variant="callout" color="secondary" numberOfLines={1}>
-          {title.title}
+          {displayName}
         </Text>
 
         {shared.length > 0 ? (

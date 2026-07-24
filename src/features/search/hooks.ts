@@ -6,7 +6,7 @@ import { avatarPublicUrl } from '@/lib/supabase/storage';
 import { tmdb } from '@/lib/tmdb/client';
 import type { Paginated, TitleSummary } from '@/types/domain';
 
-export type SearchScope = 'all' | 'movie' | 'tv';
+export type SearchScope = 'all' | 'movie' | 'tv' | 'book' | 'album' | 'artist' | 'song';
 
 const MIN_QUERY_LENGTH = 2;
 

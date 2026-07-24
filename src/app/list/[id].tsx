@@ -23,7 +23,7 @@ import {
 import { ProfileSubpageShell } from '@/features/profile/ProfileSubpageShell';
 import { useCurrentUserId } from '@/providers/AuthProvider';
 import { contentWidth, spacing } from '@/theme/tokens';
-import { mediaTypeLabel, titleHref } from '@/utils/titles';
+import { bookHref, mediaTypeLabel, musicHref, titleHref } from '@/utils/titles';
 
 export default function ListDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -137,7 +137,7 @@ export default function ListDetailScreen() {
               title="Nothing in this list yet"
               message={
                 isOwner
-                  ? 'Open any movie or show and use “Add to list”.'
+                  ? 'Open any movie, show or book and use “Add to list”.'
                   : 'Titles will appear once the owner adds them.'
               }
             />
@@ -161,7 +161,13 @@ export default function ListDetailScreen() {
                   year={item.title.releaseYear}
                   mediaTypeLabel={mediaTypeLabel(item.title.mediaType)}
                   overview={item.note ?? undefined}
-                  href={titleHref(item.title.mediaType, item.title.tmdbId)}
+                  href={
+                    item.volumeId
+                      ? bookHref(item.volumeId)
+                      : item.musicBrainzId
+                        ? musicHref(item.title.mediaType as 'album' | 'artist' | 'song', item.musicBrainzId)
+                        : titleHref(item.title.mediaType, item.title.tmdbId)
+                  }
                 />
               </View>
               {isOwner ? (

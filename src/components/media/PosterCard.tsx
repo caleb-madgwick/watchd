@@ -75,7 +75,9 @@ export function PosterCard({
           caseRef.current?.measureInWindow((x, y, w, h) => {
             const discW = w * 0.76;
             beginTransition({
-              title: summary,
+              variant: 'disc',
+              art: summary.posterUrl,
+              label: summary.title,
               origin: {
                 x: x + w - w * 0.085 - discW,
                 // The open case body is translated up by 3.5% of its height.

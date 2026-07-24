@@ -12,6 +12,7 @@ import { RetroStripes } from '@/components/RetroStripes';
 import { Wordmark } from '@/components/Wordmark';
 import { ListCard } from '@/components/lists/ListCard';
 import { MediaRow } from '@/components/media/MediaRow';
+import { MusicRow } from '@/components/media/MusicRow';
 import { Avatar } from '@/components/primitives/Avatar';
 import { LinkPressable } from '@/components/primitives/LinkPressable';
 import { Button } from '@/components/primitives/Button';
@@ -23,6 +24,7 @@ import { useUserBadges, useWatchChallenge } from '@/features/challenges/hooks';
 import { FriendButton } from '@/features/friends/FriendButton';
 import { usePendingFriendRequests } from '@/features/friends/hooks';
 import { useUserLists } from '@/features/lists/hooks';
+import { useFavouriteAlbums, useFavouriteSongs, useListenedAlbums } from '@/features/music/library';
 import { useUserReviews, useToggleReviewLike } from '@/features/reviews/hooks';
 import { BlockButton } from '@/features/social/BlockButton';
 import { FollowButton } from '@/features/social/FollowButton';
@@ -277,6 +279,9 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
   const watchedShows = useUserTitles(profile.id, { mediaType: 'tv', status: 'watched', limit: 12 });
   const watchlist = useUserTitles(profile.id, { status: 'watchlist', limit: 12 });
   const reviews = useUserReviews(profile.id);
+  const favouriteAlbums = useFavouriteAlbums(profile.id);
+  const listenedAlbums = useListenedAlbums(profile.id);
+  const favouriteSongsList = useFavouriteSongs(profile.id);
   const lists = useUserLists(profile.id);
   const diary = useDiary(profile.id);
   const activity = useUserActivity(profile.id);
@@ -293,7 +298,10 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
     (stats.data?.watchedMovies ?? 0) > 0 ||
     (stats.data?.watchedShows ?? 0) > 0 ||
     (reviews.data?.length ?? 0) > 0 ||
-    (lists.data?.length ?? 0) > 0;
+    (lists.data?.length ?? 0) > 0 ||
+    (favouriteAlbums.data?.length ?? 0) > 0 ||
+    (listenedAlbums.data?.length ?? 0) > 0 ||
+    (favouriteSongsList.data?.length ?? 0) > 0;
 
   const challengeGoal = challenge.data?.goal ?? null;
   const challengePct = challengeGoal
@@ -613,6 +621,18 @@ export function ProfileView({ profile, isSelf }: { profile: Profile; isSelf: boo
                 seeAllHref={isSelf ? '/watchlist' : undefined}
                 posterWidth={104}
               />
+            ) : null}
+
+            {favouriteAlbums.data && favouriteAlbums.data.length > 0 ? (
+              <MusicRow heading="Favourite albums" items={favouriteAlbums.data} posterWidth={116} />
+            ) : null}
+
+            {listenedAlbums.data && listenedAlbums.data.length > 0 ? (
+              <MusicRow heading="Listened albums" items={listenedAlbums.data} posterWidth={116} />
+            ) : null}
+
+            {favouriteSongsList.data && favouriteSongsList.data.length > 0 ? (
+              <MusicRow heading="Favourite songs" items={favouriteSongsList.data} posterWidth={116} />
             ) : null}
           </View>
         )}

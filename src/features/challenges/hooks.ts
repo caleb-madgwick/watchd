@@ -6,16 +6,26 @@ import { useCurrentUserId } from '@/providers/AuthProvider';
 import { toast } from '@/stores/toastStore';
 import type { UserBadge, WatchChallenge } from '@/types/database';
 
-/** A user's annual watch challenge (goal + derived progress) for one year. */
-export function useWatchChallenge(userId: string | null | undefined, year: number) {
+export type ChallengeKind = 'watch' | 'read';
+
+/**
+ * A user's annual challenge (goal + derived progress) for one year.
+ * kind 'watch' counts films + shows; 'read' counts books.
+ */
+export function useWatchChallenge(
+  userId: string | null | undefined,
+  year: number,
+  kind: ChallengeKind = 'watch',
+) {
   return useQuery({
-    queryKey: queryKeys.watchChallenge(userId ?? 'anon', year),
+    queryKey: queryKeys.watchChallenge(userId ?? 'anon', year, kind),
     enabled: !!userId && !!supabase,
     staleTime: 30_000,
     queryFn: async (): Promise<WatchChallenge> => {
       const { data, error } = await supabase!.rpc('get_watch_challenge', {
         p_user_id: userId!,
         p_year: year,
+        p_kind: kind,
       });
       if (error) throw new Error(error.message);
       return data as unknown as WatchChallenge;
@@ -23,18 +33,20 @@ export function useWatchChallenge(userId: string | null | undefined, year: numbe
   });
 }
 
-/** Set (or update) the current user's watch goal for a year. */
+/** Set (or update) the current user's goal for a year and kind. */
 export function useSetWatchGoal() {
   const queryClient = useQueryClient();
   const userId = useCurrentUserId();
   return useMutation({
-    mutationFn: async ({ year, goal }: { year: number; goal: number }) => {
+    mutationFn: async ({ year, goal, kind = 'watch' }: { year: number; goal: number; kind?: ChallengeKind }) => {
       if (!supabase) throw new Error('Not connected.');
-      const { error } = await supabase.rpc('set_watch_goal', { p_year: year, p_goal: goal });
+      const { error } = await supabase.rpc('set_watch_goal', { p_year: year, p_goal: goal, p_kind: kind });
       if (error) throw new Error(error.message);
     },
-    onSuccess: (_data, { year }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.watchChallenge(userId ?? 'anon', year) });
+    onSuccess: (_data, { year, kind = 'watch' }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.watchChallenge(userId ?? 'anon', year, kind),
+      });
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : 'Could not save your goal.'),

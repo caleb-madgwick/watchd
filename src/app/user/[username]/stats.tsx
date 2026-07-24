@@ -100,7 +100,9 @@ function StatsBody({ stats }: { stats: UserStats }) {
       <View style={styles.tiles}>
         <StatTile label="Films" value={String(stats.films_watched)} />
         <StatTile label="Shows" value={String(stats.shows_watched)} />
+        <StatTile label="Books" value={String(stats.books_read)} />
         <StatTile label="Hours" value={String(stats.hours_watched)} />
+        {stats.pages_read > 0 ? <StatTile label="Pages" value={String(stats.pages_read)} /> : null}
         <StatTile label="Rewatches" value={String(stats.rewatches)} />
         <StatTile
           label="Avg rating"
@@ -177,6 +179,35 @@ function StatsBody({ stats }: { stats: UserStats }) {
               </Text>
             </View>
           ))}
+        </Section>
+      ) : null}
+
+      {stats.top_authors.length > 0 ? (
+        <Section title="Most-read authors">
+          {stats.top_authors.map((a) => (
+            <View key={a.name} style={styles.personRow}>
+              <Text variant="body" numberOfLines={1} style={styles.personName}>
+                {a.name}
+              </Text>
+              <Text variant="caption" color="muted">
+                {a.count}
+              </Text>
+            </View>
+          ))}
+        </Section>
+      ) : null}
+
+      {stats.top_categories.length > 0 ? (
+        <Section title="Top book categories">
+          <View style={styles.chips}>
+            {stats.top_categories.map((c) => (
+              <View key={c.name} style={[styles.chip, { backgroundColor: colors.surfaceRaised }]}>
+                <Text variant="caption">
+                  {c.name} · {c.count}
+                </Text>
+              </View>
+            ))}
+          </View>
         </Section>
       ) : null}
     </>

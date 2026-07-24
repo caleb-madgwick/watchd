@@ -123,6 +123,47 @@ export function useTitleReviews(title: Pick<TitleSummary, 'tmdbId' | 'mediaType'
   });
 }
 
+/** Community reviews for a music album/song, resolved by MusicBrainz MBID. */
+export function useMusicReviews(
+  mbid: string | undefined,
+  mediaType: 'album' | 'song' | undefined,
+) {
+  const userId = useCurrentUserId();
+  return useQuery({
+    queryKey: queryKeys.musicReviews(mediaType ?? 'album', mbid ?? ''),
+    enabled: !!mbid && !!mediaType && !!supabase,
+    staleTime: 30_000,
+    queryFn: async (): Promise<ReviewWithContext[]> => {
+      const client = supabase!;
+      const { data: titleRow, error: titleError } = await client
+        .from('titles')
+        .select('id')
+        .eq('external_id', mbid!)
+        .eq('media_type', mediaType!)
+        .eq('source', 'musicbrainz')
+        .maybeSingle();
+      if (titleError) throw new Error(titleError.message);
+      if (!titleRow) return [];
+
+      const { data, error } = await client
+        .from('reviews')
+        .select(
+          'id, user_id, rating, body, contains_spoilers, like_count, created_at, updated_at, profiles!reviews_user_id_fkey(id, username, display_name, avatar_path)',
+        )
+        .eq('title_id', titleRow.id)
+        .eq('published', true)
+        .order('like_count', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(30);
+      if (error) throw new Error(error.message);
+
+      const rows = (data ?? []) as ReviewJoinRow[];
+      const liked = await likedReviewIds(userId, rows.map((row) => row.id));
+      return rows.map((row) => mapReview(row, liked));
+    },
+  });
+}
+
 export function useReview(reviewId: string | undefined) {
   const userId = useCurrentUserId();
   return useQuery({
@@ -185,6 +226,9 @@ export function useToggleReviewLike() {
           }
         : review;
     queryClient.setQueriesData<ReviewWithContext[]>({ queryKey: ['titleReviews'] }, (old) =>
+      old?.map(update),
+    );
+    queryClient.setQueriesData<ReviewWithContext[]>({ queryKey: ['musicReviews'] }, (old) =>
       old?.map(update),
     );
     queryClient.setQueriesData<ReviewWithContext[]>({ queryKey: ['userReviews'] }, (old) =>

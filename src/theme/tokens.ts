@@ -144,6 +144,10 @@ export const aspect = {
   poster: 2 / 3,
   backdrop: 16 / 9,
   profile: 1,
+  /** Hardcover proportions — slightly narrower than a poster. */
+  book: 0.66,
+  /** Square sleeve for records/CDs. */
+  album: 1,
 } as const;
 
 export const hitSlop = { top: 8, bottom: 8, left: 8, right: 8 } as const;

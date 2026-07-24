@@ -17,7 +17,8 @@ import { radius, spacing } from '@/theme/tokens';
 import type { FeedItem } from '@/types/database';
 import { activityVerb } from '@/utils/activity';
 import { timeAgo } from '@/utils/dates';
-import { titleHref, yearFromDate } from '@/utils/titles';
+import { bookHref, isMusicType, mediaTypeLabel, musicHref, titleHref, yearFromDate } from '@/utils/titles';
+import type { Href } from 'expo-router';
 
 /** One feed entry: combined verbs, title chip, review preview, timestamps. */
 export function ActivityCard({ item }: { item: FeedItem }) {
@@ -26,6 +27,22 @@ export function ActivityCard({ item }: { item: FeedItem }) {
   const isOwn = item.actor.id === currentUserId;
   const displayName = item.actor.display_name?.trim() || item.actor.username;
   const rating = typeof item.metadata.rating === 'number' ? item.metadata.rating : null;
+
+  const title = item.title;
+  const titleIsMusic = !!title && isMusicType(title.media_type);
+  const titleIsBook = title?.media_type === 'book';
+  const titleArt = title
+    ? titleIsMusic || titleIsBook
+      ? (title.cover_url ?? undefined)
+      : (posterUrl(title.poster_path, 'w185') ?? undefined)
+    : undefined;
+  const titleLinkHref: Href | undefined = title
+    ? titleIsMusic
+      ? musicHref(title.media_type as 'album' | 'artist' | 'song', title.external_id ?? '')
+      : titleIsBook
+        ? bookHref(title.external_id ?? '')
+        : titleHref(title.media_type, title.tmdb_id)
+    : undefined;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -58,32 +75,35 @@ export function ActivityCard({ item }: { item: FeedItem }) {
         </View>
       </View>
 
-      {item.title ? (
+      {title && titleLinkHref ? (
         <LinkPressable
-          href={titleHref(item.title.media_type, item.title.tmdb_id)}
-          accessibilityLabel={item.title.title}
+          href={titleLinkHref}
+          accessibilityLabel={title.title}
           style={({ pressed, hovered }) => [
             styles.titleChip,
             { backgroundColor: pressed || hovered ? colors.surfaceHigh : colors.surfaceRaised },
           ]}
         >
-            {posterUrl(item.title.poster_path, 'w185') ? (
+            {titleArt ? (
               <Image
-                source={{ uri: posterUrl(item.title.poster_path, 'w185') }}
-                style={styles.poster}
+                source={{ uri: titleArt }}
+                style={titleIsMusic ? styles.posterSquare : styles.poster}
                 contentFit="cover"
               />
             ) : (
-              <View style={[styles.poster, { backgroundColor: colors.surfaceHigh }]} />
+              <View
+                style={[titleIsMusic ? styles.posterSquare : styles.poster, { backgroundColor: colors.surfaceHigh }]}
+              />
             )}
             <View style={styles.titleChipText}>
               <Text variant="headline" numberOfLines={1}>
-                {item.title.title}
+                {title.title}
               </Text>
               <Text variant="caption" color="muted">
                 {[
-                  yearFromDate(item.title.release_date),
-                  item.title.media_type === 'movie' ? 'Movie' : 'TV',
+                  title.subtitle ?? undefined,
+                  yearFromDate(title.release_date),
+                  mediaTypeLabel(title.media_type),
                 ]
                   .filter(Boolean)
                   .join(' · ')}
@@ -177,6 +197,11 @@ const styles = StyleSheet.create({
   poster: {
     width: 34,
     height: 51,
+    borderRadius: 4,
+  },
+  posterSquare: {
+    width: 44,
+    height: 44,
     borderRadius: 4,
   },
   listIcon: {

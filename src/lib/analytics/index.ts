@@ -13,15 +13,17 @@
  * limited to ids and coarse metadata by the AnalyticsEvent type below.
  */
 
+import type { MediaType } from '@/types/domain';
+
 export type AnalyticsEvent =
   | { name: 'registration_completed' }
   | { name: 'onboarding_completed' }
-  | { name: 'search_performed'; scope: 'all' | 'movie' | 'tv' | 'user' }
-  | { name: 'title_opened'; mediaType: 'movie' | 'tv'; tmdbId: number }
-  | { name: 'title_watchlisted'; mediaType: 'movie' | 'tv'; tmdbId: number }
-  | { name: 'title_watched'; mediaType: 'movie' | 'tv'; tmdbId: number }
-  | { name: 'rating_submitted'; mediaType: 'movie' | 'tv'; tmdbId: number; rating: number }
-  | { name: 'review_submitted'; mediaType: 'movie' | 'tv'; tmdbId: number; hasSpoilers: boolean }
+  | { name: 'search_performed'; scope: MediaType | 'all' | 'user' }
+  | { name: 'title_opened'; mediaType: MediaType; tmdbId: number }
+  | { name: 'title_watchlisted'; mediaType: MediaType; tmdbId: number }
+  | { name: 'title_watched'; mediaType: MediaType; tmdbId: number }
+  | { name: 'rating_submitted'; mediaType: MediaType; tmdbId: number; rating: number }
+  | { name: 'review_submitted'; mediaType: MediaType; tmdbId: number; hasSpoilers: boolean }
   | { name: 'tv_progress_updated'; tmdbId: number; completed: boolean }
   | { name: 'user_followed' }
   | { name: 'friend_request_sent' }

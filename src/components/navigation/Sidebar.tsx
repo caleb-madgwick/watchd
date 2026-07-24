@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, usePathname } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/primitives/Avatar';
@@ -17,6 +17,8 @@ type NavHref =
   | '/home'
   | '/movies'
   | '/tv'
+  | '/music'
+  | '/books'
   | '/search'
   | '/activity'
   | '/notifications'
@@ -39,6 +41,14 @@ const BROWSE_NAV: NavItem[] = [
   { href: '/home', title: 'Home', icon: 'home-outline', iconActive: 'home' },
   { href: '/movies', title: 'Movies', icon: 'film-outline', iconActive: 'film', alsoMatch: ['/movie'] },
   { href: '/tv', title: 'TV shows', icon: 'tv-outline', iconActive: 'tv' },
+  {
+    href: '/music',
+    title: 'Music',
+    icon: 'disc-outline',
+    iconActive: 'disc',
+    alsoMatch: ['/album', '/artist', '/song'],
+  },
+  { href: '/books', title: 'Books', icon: 'book-outline', iconActive: 'book', alsoMatch: ['/book'] },
   { href: '/search', title: 'Search', icon: 'search-outline', iconActive: 'search' },
   { href: '/activity', title: 'Activity', icon: 'pulse-outline', iconActive: 'pulse' },
   {
@@ -154,7 +164,11 @@ export function Sidebar() {
           </Pressable>
         </Link>
 
-        <View style={styles.nav}>
+        <ScrollView
+          style={styles.nav}
+          contentContainerStyle={styles.navContent}
+          showsVerticalScrollIndicator={false}
+        >
           <SectionLabel>Browse</SectionLabel>
           {BROWSE_NAV.map((item) => (
             <NavRow
@@ -171,7 +185,7 @@ export function Sidebar() {
           {LIBRARY_NAV.map((item) => (
             <NavRow key={item.href} item={item} active={isActive(item)} />
           ))}
-        </View>
+        </ScrollView>
 
         {profile ? (
           <LinkPressable
@@ -218,7 +232,10 @@ const styles = StyleSheet.create({
   },
   nav: {
     flex: 1,
+  },
+  navContent: {
     gap: 2,
+    paddingBottom: spacing.md,
   },
   sectionLabel: {
     paddingHorizontal: spacing.sm,

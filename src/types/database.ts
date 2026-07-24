@@ -5,7 +5,7 @@
  * `supabase gen types typescript --linked`, but these names are the contract.)
  */
 
-export type MediaTypeRow = 'movie' | 'tv';
+export type MediaTypeRow = 'movie' | 'tv' | 'book' | 'artist' | 'album' | 'song';
 export type WatchStatusRow = 'watchlist' | 'watching' | 'watched' | 'paused' | 'dropped';
 export type ListVisibilityRow = 'public' | 'private';
 export type ActivityTypeRow =
@@ -61,6 +61,11 @@ export type ProfileRow = {
 
 export type TitleRow = {
   id: string;
+  /**
+   * TMDB id. Null in the DB for books (they use external_id), but typed `number`
+   * because the movie/TV mappers that read it never receive book rows — book
+   * surfaces read `external_id` instead.
+   */
   tmdb_id: number;
   media_type: MediaTypeRow;
   title: string;
@@ -71,8 +76,132 @@ export type TitleRow = {
   genre_ids: number[];
   runtime_minutes: number | null;
   original_language: string | null;
+  /** 'tmdb' | 'google_books'. */
+  source: string;
+  /** Google Books volume id / MusicBrainz MBID for non-TMDB titles; null for TMDB. */
+  external_id: string | null;
+  cover_url: string | null;
+  /** Denormalised secondary display line, e.g. the artist credit for music. */
+  subtitle: string | null;
+  authors: string[];
+  categories: string[];
+  page_count: number | null;
+  isbn13: string | null;
   metadata_updated_at: string;
   created_at: string;
+}
+
+export type BookProgressRow = {
+  id: string;
+  user_id: string;
+  title_id: string;
+  current_page: number;
+  total_pages: number | null;
+  percent: number;
+  completed: boolean;
+  last_read_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ── Music (albums / artists / songs) ─────────────────────────────────────────
+
+export type MusicArtistRow = {
+  catalogue_item_id: string;
+  sort_name: string | null;
+  country_code: string | null;
+  artist_type: string | null;
+  disambiguation: string | null;
+  begin_date: string | null;
+  end_date: string | null;
+}
+
+export type MusicAlbumRow = {
+  catalogue_item_id: string;
+  album_type: string | null;
+  secondary_types: string[];
+  first_release_date: string | null;
+  track_count: number | null;
+}
+
+export type MusicSongRow = {
+  catalogue_item_id: string;
+  duration_ms: number | null;
+  isrc: string | null;
+}
+
+export type MusicItemArtistRow = {
+  catalogue_item_id: string;
+  artist_item_id: string;
+  credit_name: string | null;
+  position: number;
+  role: string;
+}
+
+export type AlbumTrackRow = {
+  album_item_id: string;
+  song_item_id: string;
+  disc_number: number;
+  track_number: number;
+  track_title: string | null;
+  duration_ms: number | null;
+}
+
+export type ProviderLinkRow = {
+  id: string;
+  catalogue_item_id: string;
+  provider: string;
+  url: string;
+  provider_item_id: string | null;
+  region_code: string;
+  created_at: string;
+}
+
+export type ListeningLogRow = {
+  id: string;
+  user_id: string;
+  title_id: string;
+  listened_at: string;
+  rating: number | null;
+  notes: string | null;
+  source: string;
+  created_at: string;
+}
+
+/** One track passed to the set_album_tracks RPC. */
+export type AlbumTrackInput = {
+  song_mbid: string;
+  title: string;
+  artist?: string;
+  cover_url?: string;
+  disc_number?: number;
+  track_number: number;
+  duration_ms?: number;
+}
+
+/** One credit passed to the set_music_item_artists RPC. */
+export type MusicArtistCreditInput = {
+  mbid: string;
+  name: string;
+  credit_name?: string;
+  role?: string;
+}
+
+/** Shape returned by log_listen(). */
+export type LogListenResult = {
+  log_id: string;
+  status_id: string;
+  activity_id: string | null;
+}
+
+/** Shape returned by get_user_music_stats(). `blocked` is set instead when hidden. */
+export type MusicStats = {
+  blocked?: boolean;
+  albums_listened: number;
+  songs_favourited: number;
+  album_reviews: number;
+  average_album_rating: number | null;
+  top_artists: { artist_id: string; name: string; count: number }[];
 }
 
 export type TitlePersonDepartment = 'cast' | 'director' | 'creator' | 'crew';
@@ -341,6 +470,8 @@ export type PersonFollowRow = {
 /** Shape returned by get_watch_challenge(). goal is null when unset. */
 export type WatchChallenge = {
   year: number;
+  /** 'watch' (films + shows) or 'read' (books). */
+  kind: string;
   goal: number | null;
   watched: number;
   completed: boolean;
@@ -369,6 +500,10 @@ export type FeedItem = {
     title: string;
     poster_path: string | null;
     release_date: string | null;
+    source?: string;
+    external_id?: string | null;
+    cover_url?: string | null;
+    subtitle?: string | null;
   } | null;
   review: {
     id: string;
@@ -432,6 +567,8 @@ export type UserStats = {
   blocked?: boolean;
   films_watched: number;
   shows_watched: number;
+  books_read: number;
+  pages_read: number;
   rewatches: number;
   hours_watched: number;
   ratings_count: number;
@@ -442,6 +579,8 @@ export type UserStats = {
   top_genres: { genre_id: number; count: number }[];
   top_directors: StatPerson[];
   top_actors: StatPerson[];
+  top_authors: { name: string; count: number }[];
+  top_categories: { name: string; count: number }[];
   languages: { language: string; count: number }[];
   busiest_month: { month: string; count: number } | null;
   longest_streak: number;
@@ -547,6 +686,20 @@ export type Database = {
       tv_progress: TableShape<
         TvProgressRow,
         [TitleRel<'tv_progress_title_id_fkey'>, ProfileRel<'tv_progress_user_id_fkey', 'user_id'>]
+      >;
+      book_progress: TableShape<
+        BookProgressRow,
+        [TitleRel<'book_progress_title_id_fkey'>, ProfileRel<'book_progress_user_id_fkey', 'user_id'>]
+      >;
+      music_artists: TableShape<MusicArtistRow>;
+      music_albums: TableShape<MusicAlbumRow>;
+      music_songs: TableShape<MusicSongRow>;
+      music_item_artists: TableShape<MusicItemArtistRow>;
+      album_tracks: TableShape<AlbumTrackRow>;
+      provider_links: TableShape<ProviderLinkRow>;
+      listening_logs: TableShape<
+        ListeningLogRow,
+        [TitleRel<'listening_logs_title_id_fkey'>, ProfileRel<'listening_logs_user_id_fkey', 'user_id'>]
       >;
       reviews: TableShape<
         ReviewRow,
@@ -736,13 +889,111 @@ export type Database = {
         Args: { p_title_id: string; p_rank: number | null };
         Returns: undefined;
       };
-      set_watch_goal: { Args: { p_year: number; p_goal: number }; Returns: undefined };
+      set_watch_goal: {
+        Args: { p_year: number; p_goal: number; p_kind?: string };
+        Returns: undefined;
+      };
       get_watch_challenge: {
-        Args: { p_user_id: string; p_year: number };
+        Args: { p_user_id: string; p_year: number; p_kind?: string };
         Returns: WatchChallenge;
       };
       get_user_badges: { Args: { p_user_id: string }; Returns: UserBadge[] };
       duplicate_list: { Args: { p_list_id: string; p_name?: string | null }; Returns: string };
+      upsert_book_reference: {
+        Args: {
+          p_volume_id: string;
+          p_title: string;
+          p_authors?: string[];
+          p_cover_url?: string | null;
+          p_categories?: string[];
+          p_page_count?: number | null;
+          p_published_date?: string | null;
+          p_isbn13?: string | null;
+        };
+        Returns: string;
+      };
+      set_book_progress: {
+        Args: {
+          p_title_id: string;
+          p_current_page: number;
+          p_total_pages?: number | null;
+          p_completed?: boolean;
+        };
+        Returns: string;
+      };
+      get_book_community_summary: {
+        Args: { p_volume_id: string };
+        Returns: CommunitySummary;
+      };
+      upsert_music_reference: {
+        Args: {
+          p_mbid: string;
+          p_media_type: MediaTypeRow;
+          p_title: string;
+          p_subtitle?: string | null;
+          p_cover_url?: string | null;
+          p_release_date?: string | null;
+        };
+        Returns: string;
+      };
+      upsert_music_album_detail: {
+        Args: {
+          p_item_id: string;
+          p_album_type?: string | null;
+          p_secondary_types?: string[];
+          p_first_release_date?: string | null;
+          p_track_count?: number | null;
+        };
+        Returns: undefined;
+      };
+      upsert_music_artist_detail: {
+        Args: {
+          p_item_id: string;
+          p_sort_name?: string | null;
+          p_country_code?: string | null;
+          p_artist_type?: string | null;
+          p_disambiguation?: string | null;
+          p_begin_date?: string | null;
+          p_end_date?: string | null;
+        };
+        Returns: undefined;
+      };
+      upsert_music_song_detail: {
+        Args: { p_item_id: string; p_duration_ms?: number | null; p_isrc?: string | null };
+        Returns: undefined;
+      };
+      set_music_item_artists: {
+        Args: { p_item_id: string; p_artists: MusicArtistCreditInput[] };
+        Returns: undefined;
+      };
+      set_album_tracks: {
+        Args: { p_album_item_id: string; p_tracks: AlbumTrackInput[] };
+        Returns: undefined;
+      };
+      upsert_provider_link: {
+        Args: {
+          p_item_id: string;
+          p_provider: string;
+          p_url: string;
+          p_provider_item_id?: string | null;
+          p_region_code?: string;
+        };
+        Returns: undefined;
+      };
+      get_music_community_summary: {
+        Args: { p_mbid: string; p_media_type: MediaTypeRow };
+        Returns: CommunitySummary;
+      };
+      log_listen: {
+        Args: {
+          p_title_id: string;
+          p_listened_at?: string | null;
+          p_rating?: number | null;
+          p_notes?: string | null;
+        };
+        Returns: LogListenResult;
+      };
+      get_user_music_stats: { Args: { p_user_id: string }; Returns: MusicStats };
       log_title: {
         Args: {
           p_title_id: string;

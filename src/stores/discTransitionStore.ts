@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 
-import type { TitleSummary } from '@/types/domain';
-
 export interface DiscOrigin {
   x: number;
   y: number;
@@ -11,7 +9,12 @@ export interface DiscOrigin {
 
 export interface DiscTransitionRequest {
   id: number;
-  title: TitleSummary;
+  /** Which physical medium ejects: a DVD/CD disc, or a vinyl record. */
+  variant: 'disc' | 'vinyl';
+  /** Cover/poster art printed on the disc (or vinyl centre label). */
+  art?: string;
+  /** Title shown under the "NOW LOADING" caption. */
+  label: string;
   origin: DiscOrigin;
   href: string;
   /** Resolves when the destination's data prefetch has settled (or timed out). */

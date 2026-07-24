@@ -3,7 +3,7 @@
  * at the trust boundary — UI code never consumes raw API shapes.
  */
 
-export type MediaType = 'movie' | 'tv';
+export type MediaType = 'movie' | 'tv' | 'book' | 'artist' | 'album' | 'song';
 
 export interface TitleSummary {
   tmdbId: number;
@@ -120,6 +120,134 @@ export interface TvDetails extends TitleSummary {
 }
 
 export type TitleDetails = MovieDetails | TvDetails;
+
+/**
+ * Books have a Google Books volume id (string) rather than a numeric TMDB id, so
+ * BookSummary/BookDetails are their own shapes (not extending TitleSummary).
+ */
+export interface BookSummary {
+  volumeId: string;
+  mediaType: 'book';
+  title: string;
+  subtitle?: string;
+  authors: string[];
+  coverUrl?: string;
+  publishedYear?: number;
+  publishedDate?: string;
+  isbn13?: string;
+  /** Google Books community average, 0–5. Label as external where shown. */
+  averageRating?: number;
+}
+
+export interface BookEdition {
+  isbn13?: string;
+  publisher?: string;
+  publishedYear?: number;
+  coverUrl?: string;
+}
+
+export interface BookDetails extends BookSummary {
+  description?: string;
+  publisher?: string;
+  pageCount?: number;
+  categories: string[];
+  language?: string;
+  openLibraryWorkId?: string;
+  editions?: BookEdition[];
+  alternativeCoverUrls?: string[];
+  firstPublishedYear?: number;
+}
+
+/**
+ * Music (MusicBrainz + Cover Art Archive). Like books, music entities carry a
+ * string id — a MusicBrainz MBID — rather than a numeric TMDB id, so they are
+ * their own shapes and do not extend TitleSummary. Artwork is a full https URL
+ * (Cover Art Archive), stored in titles.cover_url.
+ */
+export type MusicItemType = 'artist' | 'album' | 'song';
+
+export type AlbumKind = 'album' | 'single' | 'ep' | 'compilation' | 'other';
+
+export interface ArtistSummary {
+  /** MusicBrainz artist MBID. */
+  musicBrainzId: string;
+  mediaType: 'artist';
+  name: string;
+  disambiguation?: string;
+  /** ISO 3166-1 alpha-2, e.g. "NZ". */
+  country?: string;
+  /** Artists rarely have licensed art; usually a branded placeholder is shown. */
+  imageUrl?: string;
+}
+
+export interface AlbumSummary {
+  /** MusicBrainz release-group MBID. */
+  musicBrainzId: string;
+  mediaType: 'album';
+  title: string;
+  artistNames: string[];
+  /** Pre-joined artist credit line for display, e.g. "Lorde". */
+  artistCredit?: string;
+  coverUrl?: string;
+  releaseYear?: number;
+  releaseDate?: string;
+  albumType?: AlbumKind;
+}
+
+export interface SongSummary {
+  /** MusicBrainz recording MBID. */
+  musicBrainzId: string;
+  mediaType: 'song';
+  title: string;
+  artistNames: string[];
+  artistCredit?: string;
+  durationMs?: number;
+  coverUrl?: string;
+  album?: AlbumSummary;
+}
+
+export interface TrackSummary {
+  position: number;
+  discNumber?: number;
+  title: string;
+  song: SongSummary;
+  durationMs?: number;
+}
+
+export interface ArtistCredit {
+  musicBrainzId: string;
+  name: string;
+  creditName?: string;
+}
+
+export interface AlbumDetails extends AlbumSummary {
+  artists: ArtistCredit[];
+  secondaryTypes?: string[];
+  trackCount?: number;
+  totalDurationMs?: number;
+  tracks: TrackSummary[];
+}
+
+export interface ArtistReleaseGroups {
+  albums: AlbumSummary[];
+  eps: AlbumSummary[];
+  singles: AlbumSummary[];
+  compilations: AlbumSummary[];
+}
+
+export interface ArtistDetails extends ArtistSummary {
+  releaseGroups: ArtistReleaseGroups;
+  /** Highlighted releases for the top of the artist page. */
+  topAlbums: AlbumSummary[];
+}
+
+export interface SongDetails extends SongSummary {
+  isrc?: string;
+  trackNumber?: number;
+}
+
+/** Any music entity surfaced in search/cards. */
+export type MusicSummary = ArtistSummary | AlbumSummary | SongSummary;
 
 export interface EpisodeSummary {
   episodeNumber: number;
