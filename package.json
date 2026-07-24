@@ -72,7 +72,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build:web": "expo export -p web",
-    "deploy:web": "npx vercel build --prod --yes && npx vercel deploy --prebuilt --prod --yes"
+    "deploy:web": "npx vercel --prod --yes"
   },
   "private": true
 }
