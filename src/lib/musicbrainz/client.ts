@@ -110,7 +110,7 @@ export const musicbrainz = {
 
   async songDetails(mbid: string): Promise<SongDetails> {
     const rec = await fetchMusicBrainz<MbRecording>(`/recording/${mbid}`, {
-      inc: 'artist-credits+releases',
+      inc: 'artist-credits+releases+release-groups',
     });
     const summary = normalizeRecording(rec);
     return { ...summary };

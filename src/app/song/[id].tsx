@@ -18,7 +18,12 @@ import { contentWidth, radius, spacing } from '@/theme/tokens';
 import { albumHref, formatDurationMs } from '@/utils/titles';
 
 export default function SongDetailScreen() {
-  const params = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{
+    id: string;
+    cover?: string;
+    albumId?: string;
+    albumTitle?: string;
+  }>();
   const mbid = params.id ?? '';
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
@@ -41,6 +46,14 @@ export default function SongDetailScreen() {
 
   const coverSize = Math.min(width - spacing.lg * 2, 220);
   const duration = formatDurationMs(song?.durationMs);
+  // Prefer the album cover/identity passed from the album's tracklist; fall back
+  // to whatever the recording lookup resolved.
+  const coverUrl = params.cover || song?.coverUrl;
+  const albumLink = params.albumId
+    ? { mbid: params.albumId, title: params.albumTitle || song?.album?.title || 'Album' }
+    : song?.album
+      ? { mbid: song.album.musicBrainzId, title: song.album.title }
+      : null;
 
   return (
     <Screen>
@@ -66,8 +79,8 @@ export default function SongDetailScreen() {
                 { width: coverSize, height: coverSize, backgroundColor: colors.surfaceRaised, borderColor: colors.border },
               ]}
             >
-              {song.coverUrl ? (
-                <Image source={{ uri: song.coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              {coverUrl ? (
+                <Image source={{ uri: coverUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
               ) : (
                 <Ionicons name="musical-note" size={coverSize * 0.3} color={colors.textMuted} />
               )}
@@ -80,10 +93,10 @@ export default function SongDetailScreen() {
                 {song.artistCredit}
               </Text>
             ) : null}
-            {song.album ? (
-              <Pressable accessibilityRole="link" onPress={() => router.push(albumHref(song.album!.musicBrainzId))}>
+            {albumLink ? (
+              <Pressable accessibilityRole="link" onPress={() => router.push(albumHref(albumLink.mbid))}>
                 <Text variant="footnote" color="accent" align="center">
-                  {song.album.title}
+                  {albumLink.title}
                 </Text>
               </Pressable>
             ) : null}

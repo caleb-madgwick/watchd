@@ -177,7 +177,12 @@ export default function AlbumDetailScreen() {
 
           {tab === 'tracklist' ? (
             <View style={[styles.body, styles.pane]}>
-              <TrackList tracks={album.tracks} />
+              <TrackList
+                tracks={album.tracks}
+                albumCoverUrl={album.coverUrl}
+                albumMbid={album.musicBrainzId}
+                albumTitle={album.title}
+              />
             </View>
           ) : null}
 

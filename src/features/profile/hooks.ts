@@ -65,7 +65,11 @@ export function useUserTitles(
       } else {
         query = query.eq('status', status).order('updated_at', { ascending: false });
       }
+      // This hook maps rows to the TMDB TitleSummary shape (poster_path, tmdb_id),
+      // so it must only return movie/tv. Music and books have their own profile
+      // sections; without this they'd render as posterless "movie" cards.
       if (mediaType) query = query.eq('titles.media_type', mediaType);
+      else query = query.in('titles.media_type', ['movie', 'tv']);
 
       const { data, error } = await query;
       if (error) throw new Error(error.message);
@@ -230,6 +234,9 @@ export function useFavourites(userId: string | undefined) {
         .select('title_id, favourite_rank, titles!inner(*)')
         .eq('user_id', userId!)
         .eq('is_favourite', true)
+        // Movie/TV only — these map to the TMDB TitleSummary shape; music/books
+        // have their own favourite sections.
+        .in('titles.media_type', ['movie', 'tv'])
         .order('favourite_rank', { ascending: true, nullsFirst: false })
         .order('updated_at', { ascending: false })
         .limit(60);

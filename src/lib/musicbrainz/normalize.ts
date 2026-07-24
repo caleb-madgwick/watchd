@@ -4,7 +4,7 @@
  * (release-group, recording) never surfaces in user-facing copy.
  */
 
-import { coverArtByReleaseGroup } from '@/lib/coverart/images';
+import { coverArtByRelease, coverArtByReleaseGroup } from '@/lib/coverart/images';
 import type {
   MbArtist,
   MbArtistCredit,
@@ -97,8 +97,12 @@ export function normalizeReleaseGroup(rg: MbReleaseGroup): AlbumSummary {
 }
 
 export function normalizeRecording(r: MbRecording): SongSummary {
-  const rg = r.releases?.[0]?.['release-group'];
+  const release = r.releases?.[0];
+  const rg = release?.['release-group'];
   const album = rg ? normalizeReleaseGroup(rg) : undefined;
+  // Prefer the release-group cover; fall back to the specific release's cover so
+  // a song still shows art even when the release-group isn't included.
+  const coverUrl = album?.coverUrl ?? coverArtByRelease(release?.id);
   return {
     musicBrainzId: r.id,
     mediaType: 'song',
@@ -106,7 +110,7 @@ export function normalizeRecording(r: MbRecording): SongSummary {
     artistNames: artistNames(r['artist-credit']),
     artistCredit: creditLine(r['artist-credit']),
     durationMs: typeof r.length === 'number' && r.length > 0 ? r.length : undefined,
-    coverUrl: album?.coverUrl,
+    coverUrl,
     album,
   };
 }

@@ -5,10 +5,18 @@ import { Text } from '@/components/primitives/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { radius, spacing } from '@/theme/tokens';
 import type { TrackSummary } from '@/types/domain';
-import { formatDurationMs, songHref } from '@/utils/titles';
+import { formatDurationMs } from '@/utils/titles';
+
+export interface TrackListProps {
+  tracks: TrackSummary[];
+  /** Album context carried to the song page so it shows the album's cover. */
+  albumCoverUrl?: string;
+  albumMbid?: string;
+  albumTitle?: string;
+}
 
 /** Compact album tracklist; tapping a track opens its song page. */
-export function TrackList({ tracks }: { tracks: TrackSummary[] }) {
+export function TrackList({ tracks, albumCoverUrl, albumMbid, albumTitle }: TrackListProps) {
   const { colors } = useTheme();
   if (tracks.length === 0) return null;
 
@@ -35,7 +43,15 @@ export function TrackList({ tracks }: { tracks: TrackSummary[] }) {
         return hasSong ? (
           <LinkPressable
             key={`${track.discNumber ?? 1}-${track.position}`}
-            href={songHref(track.song.musicBrainzId)}
+            href={{
+              pathname: '/song/[id]',
+              params: {
+                id: track.song.musicBrainzId,
+                cover: albumCoverUrl ?? '',
+                albumId: albumMbid ?? '',
+                albumTitle: albumTitle ?? '',
+              },
+            }}
             accessibilityLabel={`${track.title}, track ${track.position}`}
             style={({ pressed, hovered }) => [
               styles.row,
